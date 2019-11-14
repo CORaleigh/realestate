@@ -275,7 +275,6 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
       view.popup.on("trigger-action", function(event) {
         // Execute the measureThis() function if the measure-this action is clicked
         if (event.action.id === "create") {
-          debugger
           form.feature =  view.popup.features[0];
           document.getElementById("update").classList.remove('esri-hidden');
           formExpand.expand();
@@ -327,7 +326,7 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
 
       search.on('select-result', result => {
         view.goTo(result.result.feature);
-        //view.popup.open({features: [result.result.feature]});
+        view.popup.open({features: [result.result.feature]});
 
         fee.queryFeatures({where: "REID = '" + result.result.feature.attributes.REID + "'",
           outFields: ['*']
@@ -346,7 +345,7 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
               returnGeometry: false,
               outFields: ['ZONING']
             }).then(featureSet => {
-              
+              debugger
               if (featureSet.features.length) {
                 result.result.feature.attributes.Zoning = featureSet.features[0].attributes.ZONING;
               }
@@ -354,7 +353,6 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
               result.result.feature.attributes.Purpose = "";
               result.result.feature.attributes.Restrictions = "";
               result.result.feature.attributes.Appraised_Value = "";
-              result.result.feature.attributes.Zoning = "";
               result.result.feature.attributes.Comments = "";
               result.result.feature.attributes.Private_Comments = "";  
               form.feature = result.result.feature;

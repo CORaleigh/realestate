@@ -264,7 +264,6 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
                     view.popup.on("trigger-action", function (event) {
                         // Execute the measureThis() function if the measure-this action is clicked
                         if (event.action.id === "create") {
-                            debugger;
                             form.feature = view.popup.features[0];
                             document.getElementById("update").classList.remove('esri-hidden');
                             formExpand.expand();
@@ -308,7 +307,7 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
                     view.ui.add(formExpand, 'top-right');
                     search.on('select-result', function (result) {
                         view.goTo(result.result.feature);
-                        //view.popup.open({features: [result.result.feature]});
+                        view.popup.open({ features: [result.result.feature] });
                         fee.queryFeatures({ where: "REID = '" + result.result.feature.attributes.REID + "'",
                             outFields: ['*']
                         }).then(function (featureSet) {
@@ -326,6 +325,7 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
                                     returnGeometry: false,
                                     outFields: ['ZONING']
                                 }).then(function (featureSet) {
+                                    debugger;
                                     if (featureSet.features.length) {
                                         result.result.feature.attributes.Zoning = featureSet.features[0].attributes.ZONING;
                                     }
@@ -333,7 +333,6 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
                                     result.result.feature.attributes.Purpose = "";
                                     result.result.feature.attributes.Restrictions = "";
                                     result.result.feature.attributes.Appraised_Value = "";
-                                    result.result.feature.attributes.Zoning = "";
                                     result.result.feature.attributes.Comments = "";
                                     result.result.feature.attributes.Private_Comments = "";
                                     form.feature = result.result.feature;
