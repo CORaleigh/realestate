@@ -1,0 +1,19 @@
+{
+  "name": "realestate",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/arcgis-js-api": "^4.13.0"
+  },
+  "devDependencies": {
+    "calcite-web": "github:Esri/calcite-web#v1.2.5",
+    "dojo-typings": "^1.11.9"
+  }
+}
