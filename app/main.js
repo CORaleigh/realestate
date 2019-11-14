@@ -1,11 +1,11 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widgets/Expand", "esri/WebMap", "esri/views/MapView", "esri/widgets/Search", "esri/widgets/Search/SearchSource", "esri/widgets/FeatureForm", "esri/identity/OAuthInfo", "esri/identity/IdentityManager", "esri/support/actions/ActionButton", "esri/widgets/FeatureForm/FieldGroupConfig"], function (require, exports, Map_1, LayerList_1, Expand_1, WebMap_1, MapView_1, Search_1, SearchSource_1, FeatureForm_1, OAuthInfo_1, IdentityManager_1, ActionButton_1, FieldGroupConfig_1) {
+define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "esri/widgets/Expand", "esri/WebMap", "esri/views/MapView", "esri/widgets/Search", "esri/widgets/Search/SearchSource", "esri/widgets/FeatureForm", "esri/identity/OAuthInfo", "esri/identity/IdentityManager", "esri/support/actions/ActionButton", "esri/widgets/FeatureForm/FieldGroupConfig"], function (require, exports, LayerList_1, Legend_1, Expand_1, WebMap_1, MapView_1, Search_1, SearchSource_1, FeatureForm_1, OAuthInfo_1, IdentityManager_1, ActionButton_1, FieldGroupConfig_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    Map_1 = __importDefault(Map_1);
     LayerList_1 = __importDefault(LayerList_1);
+    Legend_1 = __importDefault(Legend_1);
     Expand_1 = __importDefault(Expand_1);
     WebMap_1 = __importDefault(WebMap_1);
     MapView_1 = __importDefault(MapView_1);
@@ -20,6 +20,13 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
         appId: 'IBzkn4XKa7OGFvYs',
         popup: false
     });
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    }
+    ;
     function getSuggestions(params, field, layer) {
         return layer.queryFeatures({
             where: field + " like '" + params.suggestTerm.toUpperCase() + "%'",
@@ -37,6 +44,31 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
                     sourceIndex: params.sourceIndex
                 };
             });
+        });
+    }
+    function showCreateForm(view, feature, form, formExpand) {
+        var zoning = view.map.layers.filter(function (layer) {
+            return layer.title === 'Raleigh Zoning';
+        }).getItemAt(0);
+        zoning.queryFeatures({ geometry: feature.geometry.centroid,
+            returnGeometry: false,
+            outFields: ['ZONING']
+        }).then(function (featureSet) {
+            if (featureSet.features.length) {
+                feature.attributes.Zoning = featureSet.features[0].attributes.ZONING;
+            }
+            feature.attributes.Maintenance_Manager = "";
+            feature.attributes.Purpose = "";
+            feature.attributes.Restrictions = "";
+            feature.attributes.Appraised_Value = "";
+            feature.attributes.Comments = "";
+            feature.attributes.Private_Comments = "";
+            form.feature = feature;
+            document.getElementById("form").classList.remove('esri-hidden');
+            document.getElementById("btnUpdate").classList.remove('esri-hidden');
+            document.getElementById("updateText").classList.add('esri-hidden');
+            formExpand.expand();
+            document.getElementById("btnUpdate").setAttribute("value", "CREATE");
         });
     }
     function getResults(params, field, layer) {
@@ -63,9 +95,6 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
     }
     IdentityManager_1.default.registerOAuthInfos([info]);
     IdentityManager_1.default.checkSignInStatus(info.portalUrl + '/sharing').then(function (event) {
-        var map = new Map_1.default({
-            basemap: "gray-vector"
-        });
         var webMap = new WebMap_1.default({ portalItem: { id: "473e977864324dcf8c6ffbdfa1bcc92f" } });
         var view = new MapView_1.default({
             map: webMap,
@@ -85,7 +114,7 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
                 var copyAction = new ActionButton_1.default({
                     title: "Create Real Estate",
                     id: "create",
-                    className: "esri-icon-plus-circled"
+                    className: "esri-icon-edit"
                 });
                 // const template = new PopupTemplate({
                 //   // autocasts as new PopupTemplate()
@@ -126,8 +155,8 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
                     sources: [reidSource, addrSource]
                 });
                 view.ui.add(search, 'top-left');
-                view.ui.add(new Expand_1.default({ container: document.createElement('div'), content: new LayerList_1.default({ view: view, container: document.createElement('div') }) }), 'top-left');
                 view.whenLayerView(fee).then(function (layerView) {
+                    search.search(getUrlParameter('reid'));
                     var form = new FeatureForm_1.default({
                         container: "form",
                         layer: layerView.layer,
@@ -264,10 +293,7 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
                     view.popup.on("trigger-action", function (event) {
                         // Execute the measureThis() function if the measure-this action is clicked
                         if (event.action.id === "create") {
-                            form.feature = view.popup.features[0];
-                            document.getElementById("update").classList.remove('esri-hidden');
-                            formExpand.expand();
-                            document.getElementById("btnUpdate").setAttribute("value", "CREATE");
+                            showCreateForm(view, view.popup.features[0], form, formExpand);
                         }
                     });
                     fee.outFields = ['*'];
@@ -280,7 +306,9 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
                                 if (matches.length) {
                                     console.log(matches[0].graphic);
                                     form.feature = matches[0].graphic;
-                                    document.getElementById("update").classList.remove('esri-hidden');
+                                    document.getElementById("form").classList.remove('esri-hidden');
+                                    document.getElementById("btnUpdate").classList.remove('esri-hidden');
+                                    document.getElementById("updateText").classList.add('esri-hidden');
                                     formExpand.expand();
                                     document.getElementById("btnUpdate").setAttribute("value", "UPDATE");
                                 }
@@ -300,11 +328,26 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
                         fee.applyEdits({ addFeatures: adds, updateFeatures: updates }).then(function (result) {
                             fee.refresh();
                             form.feature = null;
-                            document.getElementById("update").classList.add('esri-hidden');
+                            document.getElementById("form").classList.add('esri-hidden');
+                            document.getElementById("btnUpdate").classList.add('esri-hidden');
+                            document.getElementById("updateText").classList.remove('esri-hidden');
                         });
                     });
-                    var formExpand = new Expand_1.default({ container: document.createElement('div'), content: document.getElementById('update') });
+                    var layerExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new LayerList_1.default({ view: view, container: document.createElement('div') }) });
+                    var legendExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new Legend_1.default({ view: view, container: document.createElement('div') }) });
+                    layerExpand.watch('expanded', function (expanded) {
+                        if (expanded) {
+                            legendExpand.collapse();
+                        }
+                    });
+                    legendExpand.watch('expanded', function (expanded) {
+                        if (expanded) {
+                            layerExpand.collapse();
+                        }
+                    });
+                    var formExpand = new Expand_1.default({ container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
                     view.ui.add(formExpand, 'top-right');
+                    view.ui.add([layerExpand, legendExpand], 'bottom-left');
                     search.on('select-result', function (result) {
                         view.goTo(result.result.feature);
                         view.popup.open({ features: [result.result.feature] });
@@ -313,33 +356,14 @@ define(["require", "exports", "esri/Map", "esri/widgets/LayerList", "esri/widget
                         }).then(function (featureSet) {
                             if (featureSet.features.length) {
                                 form.feature = featureSet.features[0];
-                                document.getElementById("update").classList.remove('esri-hidden');
+                                document.getElementById("form").classList.remove('esri-hidden');
+                                document.getElementById("btnUpdate").classList.remove('esri-hidden');
+                                document.getElementById("updateText").classList.add('esri-hidden');
                                 formExpand.expand();
                                 document.getElementById("btnUpdate").setAttribute("value", "UPDATE");
                             }
                             else {
-                                var zoning = view.map.layers.filter(function (layer) {
-                                    return layer.title === 'Raleigh Zoning';
-                                }).getItemAt(0);
-                                zoning.queryFeatures({ geometry: result.result.feature.geometry.centroid,
-                                    returnGeometry: false,
-                                    outFields: ['ZONING']
-                                }).then(function (featureSet) {
-                                    debugger;
-                                    if (featureSet.features.length) {
-                                        result.result.feature.attributes.Zoning = featureSet.features[0].attributes.ZONING;
-                                    }
-                                    result.result.feature.attributes.Maintenance_Manager = "";
-                                    result.result.feature.attributes.Purpose = "";
-                                    result.result.feature.attributes.Restrictions = "";
-                                    result.result.feature.attributes.Appraised_Value = "";
-                                    result.result.feature.attributes.Comments = "";
-                                    result.result.feature.attributes.Private_Comments = "";
-                                    form.feature = result.result.feature;
-                                    document.getElementById("update").classList.remove('esri-hidden');
-                                    formExpand.expand();
-                                    document.getElementById("btnUpdate").setAttribute("value", "CREATE");
-                                });
+                                showCreateForm(view, result.result.feature, form, formExpand);
                             }
                         });
                         document.getElementById("btnUpdate").onclick = function () {

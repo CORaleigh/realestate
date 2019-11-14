@@ -62,6 +62,19 @@
   max-width: 100% !important;
 }
 
+.esri-expand__container {
+  z-index: 100 !important;
+}
+
+.esri-expand__content {
+  min-width: 150px !important;
+}
+.esri-ui-bottom-left, .esri-ui-bottom-right {
+  flex-flow: column !important;
+}
+
+
+
 
     </style>
     <link rel="stylesheet" href="https://js.arcgis.com/4.13/esri/themes/light/main.css">
@@ -91,23 +104,16 @@
                 </a>
               </div>
               <a href="#" class="top-nav-title right">Real Estate Manager</a>
-        
-              <!-- <nav class="class-top-nav-list right" role="navigation" aria-labelledby="usernav">
-                  <label class="toggle-switch modifier-class">
-                    <input type="checkbox" class="toggle-switch-input" (change)="darkModeToggle($event)">
-                    <span class="toggle-switch-track margin-right-1"></span>
-                    <span class="toggle-switch-label font-size--1">Dark Mode</span>
-                  </label>  
-              </nav>       -->
             </div>
           </div>
         </header>    
     <div id="viewDiv"></div>
-    <div id="update" class="esri-widget esri-hidden">
-      <div id="form" class="scroller esri-component"></div>
+    <div id="update" class="esri-widget">
+      <span id="updateText" class="update-text">Search for or Select Property</span>
+      <div id="form" class="scroller esri-component esri-hidden"></div>
       <input
         type="button"
-        class="esri-button btn-green"
+        class="esri-button btn-green  esri-hidden"
         value="CREATE"
         id="btnUpdate"
       />
