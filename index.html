@@ -79,7 +79,8 @@
     </style>
     <link rel="stylesheet" href="https://js.arcgis.com/4.13/esri/themes/light/main.css">
     <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
-
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <script>
       var locationPath = location.pathname.replace(/\/[^\/]+$/, "");
       window.dojoConfig = {
@@ -90,8 +91,15 @@
           }
         ]
       };
+
+
     </script>
+
+ 
     <script src="https://js.arcgis.com/4.13"></script>
+    <script type="module" src="material-table/material-table.esm.js"></script>
+    <script nomodule src="material-table/material-table.js"></script>
+
   </head>
   <body>
       <header class="top-nav fade-in" *ngIf="loaded">
@@ -118,6 +126,12 @@
         id="btnUpdate"
       />
     </div>
+    <div id="feeTable" class="esri-widget" style="overflow:auto;height: 300px;position: fixed;left:1em;bottom:2em;right:60px" >
+    <material-table id="feeMatTable" class="esri-hidden" row-selected="rowSelected" layer-id="0" item-id="94cbf9d8de8e4168ae52223937e5e7dd" where="1=1" fields="Maintenance_Manager,PIN_NUM,REID,SITE_ADDRESS,OWNER,ADDR1,ADDR2,ADDR3,CITY_DECODE,LAND_VAL,BLDG_VAL,TOTAL_VALUE_ASSD,SALE_DATE"></material-table>
+    </div>
+    <div id="propTable" class="esri-widget" style="overflow:auto;height: 300px;position: fixed;left:1em;bottom:2em;right:60px" >
+        <material-table id="propMatTable" class="esri-hidden" row-selected="rowSelected" layer-id="0" item-id="08050bf067bb4b20adea4b0b4f0a39e3" where="1=1" fields="PIN_NUM,REID,SITE_ADDRESS,OWNER,ADDR1,ADDR2,ADDR3,CITY_DECODE,LAND_VAL,BLDG_VAL,TOTAL_VALUE_ASSD,SALE_DATE"></material-table>
+        </div>    
     <script>require(["app/main"]);</script>
   </body>
 </html>

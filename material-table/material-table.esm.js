@@ -1,0 +1,1 @@
+import{p as e,b as a}from"./p-444b1dc4.js";e().then(e=>a([["p-8yznvyhx",[[0,"material-table",{itemId:[1025,"item-id"],layerId:[1026,"layer-id"],fields:[1025],where:[1025],headers:[32],features:[32]}]]]],e));

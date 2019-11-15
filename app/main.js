@@ -1,7 +1,7 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "esri/widgets/Expand", "esri/WebMap", "esri/views/MapView", "esri/widgets/Search", "esri/widgets/Search/SearchSource", "esri/widgets/FeatureForm", "esri/identity/OAuthInfo", "esri/identity/IdentityManager", "esri/support/actions/ActionButton", "esri/widgets/FeatureForm/FieldGroupConfig"], function (require, exports, LayerList_1, Legend_1, Expand_1, WebMap_1, MapView_1, Search_1, SearchSource_1, FeatureForm_1, OAuthInfo_1, IdentityManager_1, ActionButton_1, FieldGroupConfig_1) {
+define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "esri/widgets/Expand", "esri/WebMap", "esri/views/MapView", "esri/widgets/Search", "esri/widgets/Search/SearchSource", "esri/widgets/FeatureForm", "esri/identity/OAuthInfo", "esri/identity/IdentityManager", "esri/support/actions/ActionButton", "esri/widgets/FeatureForm/FieldGroupConfig", "esri/core/Collection"], function (require, exports, LayerList_1, Legend_1, Expand_1, WebMap_1, MapView_1, Search_1, SearchSource_1, FeatureForm_1, OAuthInfo_1, IdentityManager_1, ActionButton_1, FieldGroupConfig_1, Collection_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     LayerList_1 = __importDefault(LayerList_1);
@@ -16,10 +16,12 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
     IdentityManager_1 = __importDefault(IdentityManager_1);
     ActionButton_1 = __importDefault(ActionButton_1);
     FieldGroupConfig_1 = __importDefault(FieldGroupConfig_1);
+    Collection_1 = __importDefault(Collection_1);
     var info = new OAuthInfo_1.default({
         appId: 'IBzkn4XKa7OGFvYs',
         popup: false
     });
+    var feeFilter = new Collection_1.default([]); //new Collection(["Maintenance_Manager like '%Community Development'","Maintenance_Manager = 'PRCR'","Maintenance_Manager = 'Public Utilities'","Maintenance_Manager = 'Fire Department'","Maintenance_Manager like 'ES/%'","Maintenance_Manager = 'ES/Construction Management'","Maintenance_Manager = 'City Planning'","Maintenance_Manager = 'ES/Stormwater'","Maintenance_Manager = 'Solid Waste Services'","Maintenance_Manager like '%Transportation%'","Maintenance_Manager = 'Convention and Conference Center'"])
     function getUrlParameter(name) {
         name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
         var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -333,7 +335,237 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                             document.getElementById("updateText").classList.remove('esri-hidden');
                         });
                     });
-                    var layerExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new LayerList_1.default({ view: view, container: document.createElement('div') }) });
+                    var layerList = new LayerList_1.default({ view: view,
+                        container: document.createElement('div'),
+                        listItemCreatedFunction: function (event) {
+                            var item = event.item;
+                            if (item.title === 'Property Boundaries') {
+                                item.open = true;
+                                item.actionsOpen = true;
+                                item.actionsSections = [[{
+                                            title: 'Filter Potential Properties',
+                                            id: 'propertyFilter',
+                                            type: 'toggle',
+                                            visible: true
+                                        }]];
+                            }
+                            if (item.title === 'City of Raleigh Fee Properties') {
+                                item.open = true;
+                                item.actionsOpen = false;
+                                item.actionsSections = [[{
+                                            title: 'Community Development',
+                                            id: 'community',
+                                            type: 'toggle',
+                                            visible: true
+                                        }],
+                                    [{
+                                            title: 'PRCR',
+                                            id: 'prcr',
+                                            type: 'toggle',
+                                            visible: true
+                                        }],
+                                    [{
+                                            title: 'Public Utilities',
+                                            id: 'pu',
+                                            type: 'toggle',
+                                            visible: true
+                                        }],
+                                    [{
+                                            title: 'Fire',
+                                            id: 'fire',
+                                            type: 'toggle',
+                                            visible: true
+                                        }],
+                                    [{
+                                            title: 'Engineering Services',
+                                            id: 'engineering',
+                                            type: 'toggle',
+                                            visible: true
+                                        }],
+                                    [{
+                                            title: 'Construction Management',
+                                            id: 'construction',
+                                            type: 'toggle',
+                                            visible: true
+                                        }],
+                                    [{
+                                            title: 'Facilities & Operations',
+                                            id: 'fo',
+                                            type: 'toggle',
+                                            visible: true
+                                        }],
+                                    [{
+                                            title: 'City Planning',
+                                            id: 'planning',
+                                            type: 'toggle',
+                                            visible: true
+                                        }],
+                                    [{
+                                            title: 'Stormwater',
+                                            id: 'stormwater',
+                                            type: 'toggle',
+                                            visible: true
+                                        }],
+                                    [{
+                                            title: 'SWS',
+                                            id: 'sws',
+                                            type: 'toggle',
+                                            visible: true
+                                        }],
+                                    [{
+                                            title: 'Transportation',
+                                            id: 'transportation',
+                                            type: 'toggle',
+                                            visible: true
+                                        }],
+                                    [{
+                                            title: 'RCCC',
+                                            id: 'rcc',
+                                            type: 'toggle',
+                                            visible: true
+                                        }]
+                                ];
+                            }
+                        }
+                    });
+                    layerList.on('trigger-action', function (event) {
+                        if (event.action.id === 'propertyFilter') {
+                            //@ts-ignore
+                            if (event.action.value) {
+                                event.item.layer.definitionExpression = "(((UPPER(OWNER) LIKE '%RALEIGH%') AND (UPPER(OWNER) LIKE '%CITY%') AND (UPPER(OWNER) NOT LIKE '%HOUSING%') AND (UPPER(OWNER) NOT LIKE '%CENTER%') AND (UPPER(REID) <> '0112518')))";
+                                //@ts-ignore
+                                document.querySelector('#propMatTable').setAttribute('where', event.item.layer.definitionExpression);
+                                //@ts-ignore
+                                event.item.layer.refresh();
+                            }
+                            else {
+                                event.item.layer.definitionExpression = "1=1";
+                                //@ts-ignore
+                                document.querySelector('#propMatTable').setAttribute('where', "1=1");
+                                event.item.layer.refresh();
+                            }
+                        }
+                        else {
+                            if (event.action.id === 'community') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager like '%Community Development%'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager like '%Community Development%'");
+                                }
+                            }
+                            if (event.action.id === 'prcr') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager = 'PRCR'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager = 'PRCR'");
+                                }
+                            }
+                            if (event.action.id === 'pu') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager = 'Public Utilities'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager = 'Public Utilities'");
+                                }
+                            }
+                            if (event.action.id === 'fire') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager = 'Fire Department'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager = 'Fire Department'");
+                                }
+                            }
+                            if (event.action.id === 'engineering') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager like 'ES/%'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager like 'ES/%'");
+                                }
+                            }
+                            if (event.action.id === 'construction') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager = 'ES/Construction Management'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager = 'ES/Construction Management'");
+                                }
+                            }
+                            if (event.action.id === 'fo') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager = 'ES/Construction Management'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager = 'ES/Construction Management'");
+                                }
+                            }
+                            if (event.action.id === 'planning') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager = 'City Planning'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager = 'City Planning'");
+                                }
+                            }
+                            if (event.action.id === 'stormwater') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager = 'ES/Stormwater'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager = 'ES/Stormwater'");
+                                }
+                            }
+                            if (event.action.id === 'sws') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager = 'Solid Waste Services'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager = 'Solid Waste Services'");
+                                }
+                            }
+                            if (event.action.id === 'transportation') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager like '%Transportation%'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager like '%Transportation%'");
+                                }
+                            }
+                            if (event.action.id === 'rcc') {
+                                //@ts-ignore
+                                if (event.action.value) {
+                                    feeFilter.add("Maintenance_Manager = 'Convention and Conference Center'");
+                                }
+                                else {
+                                    feeFilter.remove("Maintenance_Manager = 'Convention and Conference Center'");
+                                }
+                            }
+                            //@ts-ignore
+                            if (event.action.value) {
+                                event.item.layer.definitionExpression = feeFilter.toArray().toString().replace(/,/g, ' OR ');
+                                event.item.layer.refresh();
+                            }
+                            else {
+                                event.item.layer.definitionExpression = '1=1';
+                                event.item.layer.refresh();
+                            }
+                        }
+                    });
+                    var layerExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: layerList, expanded: true });
                     var legendExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new Legend_1.default({ view: view, container: document.createElement('div') }) });
                     layerExpand.watch('expanded', function (expanded) {
                         if (expanded) {
@@ -345,9 +577,38 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                             layerExpand.collapse();
                         }
                     });
-                    var formExpand = new Expand_1.default({ container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
+                    var formExpand = new Expand_1.default({ container: document.createElement('div'), mode: 'floating', expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
                     view.ui.add(formExpand, 'top-right');
                     view.ui.add([layerExpand, legendExpand], 'bottom-left');
+                    var tableExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('feeTable') });
+                    var propTableExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('propTable') });
+                    tableExpand.watch('expanded', function (expanded) {
+                        if (expanded) {
+                            propTableExpand.collapse();
+                            document.querySelector('#feeMatTable').classList.remove('esri-hidden');
+                        }
+                        else {
+                            document.querySelector('#feeMatTable').classList.add('esri-hidden');
+                        }
+                    });
+                    view.ui.add(tableExpand, 'bottom-right');
+                    propTableExpand.watch('expanded', function (expanded) {
+                        if (expanded) {
+                            tableExpand.collapse();
+                            document.querySelector('#propMatTable').classList.remove('esri-hidden');
+                        }
+                        else {
+                            document.querySelector('#propMatTable').classList.add('esri-hidden');
+                        }
+                    });
+                    view.ui.add(propTableExpand, 'bottom-right');
+                    document.addEventListener('rowSelected', function (event) {
+                        fee.definitionExpression = feeFilter.toArray().toString().replace(/,/g, ' OR ');
+                        fee.refresh();
+                        fee.queryFeatures({ returnGeometry: true, objectIds: [event.detail.attributes.OBJECTID], outFields: ['*'], outSpatialReference: view.spatialReference }).then(function (featureSet) {
+                            view.goTo(featureSet.features);
+                        });
+                    });
                     search.on('select-result', function (result) {
                         view.goTo(result.result.feature);
                         view.popup.open({ features: [result.result.feature] });

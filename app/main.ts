@@ -11,11 +11,16 @@ import OAuthInfo from "esri/identity/OAuthInfo";
 import esriId from "esri/identity/IdentityManager";
 import ActionButton from "esri/support/actions/ActionButton";
 import FieldGroupConfig from "esri/widgets/FeatureForm/FieldGroupConfig";
+import Collection from "esri/core/Collection";
 
 const info = new OAuthInfo({
   appId: 'IBzkn4XKa7OGFvYs',
   popup: false
 });
+
+let feeFilter:Collection = new Collection([]);//new Collection(["Maintenance_Manager like '%Community Development'","Maintenance_Manager = 'PRCR'","Maintenance_Manager = 'Public Utilities'","Maintenance_Manager = 'Fire Department'","Maintenance_Manager like 'ES/%'","Maintenance_Manager = 'ES/Construction Management'","Maintenance_Manager = 'City Planning'","Maintenance_Manager = 'ES/Stormwater'","Maintenance_Manager = 'Solid Waste Services'","Maintenance_Manager like '%Transportation%'","Maintenance_Manager = 'Convention and Conference Center'"])
+
+ 
 
 function getUrlParameter(name:string) {
   name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
@@ -107,6 +112,7 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
     let fee = view.map.layers.filter(layer => {
       return layer.title === "City of Raleigh Fee Properties"
     }).getItemAt(0) as FeatureLayer;      
+
     view.whenLayerView(property).then(layerView => {
       const copyAction = new ActionButton({
         title: "Create Real Estate",
@@ -145,7 +151,7 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
         minSuggestCharacters: 4,
         //@ts-ignore
         name: 'Address'
-      });        
+      });   
       const search = new Search({
         container: document.createElement('div'),
         includeDefaultSources: false,
@@ -154,7 +160,6 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
       view.ui.add(search, 'top-left');
       view.whenLayerView(fee).then(layerView => {
         search.search(getUrlParameter('reid'));
-
         let form = new FeatureForm({
           container: "form",
           layer: layerView.layer,
@@ -328,7 +333,232 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
             document.getElementById("updateText").classList.remove('esri-hidden');
           });
         })
-        let layerExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:new LayerList({view: view, container: document.createElement('div')})});
+        let layerList = new LayerList({view: view, 
+          container: document.createElement('div'),
+          listItemCreatedFunction: (event) => {
+            let item = event.item;
+            if (item.title === 'Property Boundaries') {
+              item.open = true;
+              item.actionsOpen = true;
+              item.actionsSections = [[{
+                title: 'Filter Potential Properties',
+                id: 'propertyFilter',
+                type: 'toggle',
+                visible: true
+              }]]
+            }
+            if (item.title === 'City of Raleigh Fee Properties') {
+              item.open = true;
+              item.actionsOpen = false;
+              item.actionsSections = [[{
+                title: 'Community Development',
+                id: 'community',
+                type: 'toggle',
+                visible: true
+              }],
+              [{
+                title: 'PRCR',
+                id: 'prcr',
+                type: 'toggle',
+                visible: true
+              }],
+              [{
+                title: 'Public Utilities',
+                id: 'pu',
+                type: 'toggle',
+                visible: true
+              }],
+              [{
+                title: 'Fire',
+                id: 'fire',
+                type: 'toggle',
+                visible: true
+              }],
+              [{
+                title: 'Engineering Services',
+                id: 'engineering',
+                type: 'toggle',
+                visible: true
+              }],
+              [{
+                title: 'Construction Management',
+                id: 'construction',
+                type: 'toggle',
+                visible: true
+              }],
+              [{
+                title: 'Facilities & Operations',
+                id: 'fo',
+                type: 'toggle',
+                visible: true
+              }],
+              [{
+                title: 'City Planning',
+                id: 'planning',
+                type: 'toggle',
+                visible: true
+              }],
+              [{
+                title: 'Stormwater',
+                id: 'stormwater',
+                type: 'toggle',
+                visible: true
+              }],
+              [{
+                title: 'SWS',
+                id: 'sws',
+                type: 'toggle',
+                visible: true
+              }],
+              [{
+                title: 'Transportation',
+                id: 'transportation',
+                type: 'toggle',
+                visible: true
+              }],
+              [{
+                title: 'RCCC',
+                id: 'rcc',
+                type: 'toggle',
+                visible: true
+              }]
+            ]
+            }            
+          }
+        });
+        layerList.on('trigger-action', (event) => {
+          if (event.action.id === 'propertyFilter') {
+            //@ts-ignore
+            if(event.action.value) {
+              (event.item.layer as FeatureLayer).definitionExpression = "(((UPPER(OWNER) LIKE '%RALEIGH%') AND (UPPER(OWNER) LIKE '%CITY%') AND (UPPER(OWNER) NOT LIKE '%HOUSING%') AND (UPPER(OWNER) NOT LIKE '%CENTER%') AND (UPPER(REID) <> '0112518')))";
+              
+                          //@ts-ignore
+
+              document.querySelector('#propMatTable').setAttribute('where', (event.item.layer as FeatureLayer).definitionExpression);
+                          //@ts-ignore
+
+              (event.item.layer as FeatureLayer).refresh();
+            } else {
+              (event.item.layer as FeatureLayer).definitionExpression = "1=1"           
+              //@ts-ignore
+              document.querySelector('#propMatTable').setAttribute('where', "1=1");
+              (event.item.layer as FeatureLayer).refresh();
+            }
+          } else {
+
+            if (event.action.id === 'community') {
+                          //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager like '%Community Development%'")
+              } else {
+                feeFilter.remove("Maintenance_Manager like '%Community Development%'")               
+              }
+            }
+            if (event.action.id === 'prcr') {
+              //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager = 'PRCR'")
+              } else {
+                feeFilter.remove("Maintenance_Manager = 'PRCR'")               
+              }
+            }
+            if (event.action.id === 'pu') {
+              //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager = 'Public Utilities'")
+              } else {
+                feeFilter.remove("Maintenance_Manager = 'Public Utilities'")               
+              }
+            }
+            if (event.action.id === 'fire') {
+              //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager = 'Fire Department'")
+              } else {
+                feeFilter.remove("Maintenance_Manager = 'Fire Department'")               
+              }
+            }
+            if (event.action.id === 'engineering') {
+              //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager like 'ES/%'")     
+              } else {
+                feeFilter.remove("Maintenance_Manager like 'ES/%'")               
+              }
+            }
+            if (event.action.id === 'construction') {
+              //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager = 'ES/Construction Management'")     
+              } else {
+                feeFilter.remove("Maintenance_Manager = 'ES/Construction Management'")            
+              }
+            }
+            if (event.action.id === 'fo') {
+              //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager = 'ES/Construction Management'")     
+              } else {
+                feeFilter.remove("Maintenance_Manager = 'ES/Construction Management'")            
+              }
+            }
+            if (event.action.id === 'planning') {
+              //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager = 'City Planning'")     
+              } else {
+                feeFilter.remove("Maintenance_Manager = 'City Planning'")            
+              }
+            }
+            if (event.action.id === 'stormwater') {
+              //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager = 'ES/Stormwater'")     
+              } else {
+                feeFilter.remove("Maintenance_Manager = 'ES/Stormwater'")            
+              }
+            }      
+            if (event.action.id === 'sws') {
+              //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager = 'Solid Waste Services'")     
+              } else {
+                feeFilter.remove("Maintenance_Manager = 'Solid Waste Services'")            
+              }
+            }
+            if (event.action.id === 'transportation') {
+              //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager like '%Transportation%'")     
+              } else {
+                feeFilter.remove("Maintenance_Manager like '%Transportation%'")             
+              }
+            }
+            if (event.action.id === 'rcc') {
+              //@ts-ignore
+              if(event.action.value) {
+                feeFilter.add("Maintenance_Manager = 'Convention and Conference Center'")     
+              } else {
+                feeFilter.remove("Maintenance_Manager = 'Convention and Conference Center'")            
+              }
+            }
+                                                                                                       
+            //@ts-ignore
+            if(event.action.value) {
+              (event.item.layer as FeatureLayer).definitionExpression = feeFilter.toArray().toString().replace(/,/g,' OR '); 
+              (event.item.layer as FeatureLayer).refresh();
+            } else {
+              (event.item.layer as FeatureLayer).definitionExpression = '1=1';
+              (event.item.layer as FeatureLayer).refresh();
+            }
+          }
+
+
+        });
+        let layerExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:layerList, expanded: true});
+        
+        
+        
         let legendExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:new Legend({view: view, container: document.createElement('div')})});
         layerExpand.watch('expanded', expanded => {
           if (expanded) {
@@ -340,9 +570,49 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
             layerExpand.collapse();
           }
         });
-        let formExpand = new Expand({container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});
+
+
+        let formExpand = new Expand({container: document.createElement('div'), mode: 'floating', expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});
         view.ui.add(formExpand, 'top-right');
         view.ui.add([layerExpand, legendExpand], 'bottom-left');
+        let tableExpand = new Expand({container: document.createElement('div'),group:'bottom-right', content: document.getElementById('feeTable')});
+        let propTableExpand = new Expand({container: document.createElement('div'),group:'bottom-right', content: document.getElementById('propTable')});
+      
+        tableExpand.watch('expanded', expanded => {
+          if (expanded) {
+            propTableExpand.collapse();
+          
+            document.querySelector('#feeMatTable').classList.remove('esri-hidden');
+          } else {
+
+            document.querySelector('#feeMatTable').classList.add('esri-hidden');
+          }
+        });
+        view.ui.add(tableExpand, 'bottom-right');
+
+        propTableExpand.watch('expanded', expanded => {
+          if (expanded) {
+
+            tableExpand.collapse();
+
+            document.querySelector('#propMatTable').classList.remove('esri-hidden');
+          } else {
+
+            document.querySelector('#propMatTable').classList.add('esri-hidden');
+          }
+        });        
+        view.ui.add(propTableExpand, 'bottom-right');
+
+        document.addEventListener('rowSelected', (event:any) => {
+          fee.definitionExpression = feeFilter.toArray().toString().replace(/,/g,' OR '); 
+          fee.refresh();
+
+          fee.queryFeatures({returnGeometry: true, objectIds:[event.detail.attributes.OBJECTID], outFields:['*'], outSpatialReference:view.spatialReference}).then(
+            featureSet => {
+              view.goTo(featureSet.features);
+            }
+          )
+        });     
         search.on('select-result', result => {
           view.goTo(result.result.feature);
           view.popup.open({features: [result.result.feature]});
