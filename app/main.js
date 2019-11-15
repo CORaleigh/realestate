@@ -26,7 +26,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
         var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
         var results = regex.exec(location.search);
-        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        return results === null ? null : decodeURIComponent(results[1].replace(/\+/g, ' '));
     }
     ;
     function getSuggestions(params, field, layer) {
@@ -158,7 +158,10 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                 });
                 view.ui.add(search, 'top-left');
                 view.whenLayerView(fee).then(function (layerView) {
-                    search.search(getUrlParameter('reid'));
+                    var reid = getUrlParameter('reid');
+                    if (reid) {
+                        search.search(getUrlParameter('reid'));
+                    }
                     var form = new FeatureForm_1.default({
                         container: "form",
                         layer: layerView.layer,
@@ -557,10 +560,12 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                             //@ts-ignore
                             if (event.action.value) {
                                 event.item.layer.definitionExpression = feeFilter.toArray().toString().replace(/,/g, ' OR ');
+                                document.querySelector('#feeMatTable').setAttribute('where', event.item.layer.definitionExpression);
                                 event.item.layer.refresh();
                             }
                             else {
                                 event.item.layer.definitionExpression = '1=1';
+                                document.querySelector('#feeMatTable').setAttribute('where', '1=1');
                                 event.item.layer.refresh();
                             }
                         }
@@ -580,8 +585,8 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                     var formExpand = new Expand_1.default({ container: document.createElement('div'), mode: 'floating', expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
                     view.ui.add(formExpand, 'top-right');
                     view.ui.add([layerExpand, legendExpand], 'bottom-left');
-                    var tableExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('feeTable') });
-                    var propTableExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('propTable') });
+                    var tableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-organization', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('feeTable') });
+                    var propTableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-table', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('propTable') });
                     tableExpand.watch('expanded', function (expanded) {
                         if (expanded) {
                             propTableExpand.collapse();

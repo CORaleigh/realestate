@@ -26,7 +26,7 @@ function getUrlParameter(name:string) {
   name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
   let regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
   let results = regex.exec(location.search);
-  return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+  return results === null ? null : decodeURIComponent(results[1].replace(/\+/g, ' '));
 };
 function getSuggestions(params:any, field:string, layer:FeatureLayer) {
   return layer.queryFeatures({
@@ -159,7 +159,10 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
       });
       view.ui.add(search, 'top-left');
       view.whenLayerView(fee).then(layerView => {
-        search.search(getUrlParameter('reid'));
+        let reid = getUrlParameter('reid');
+        if (reid) {
+          search.search(getUrlParameter('reid'));
+        }
         let form = new FeatureForm({
           container: "form",
           layer: layerView.layer,
@@ -546,9 +549,11 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
             //@ts-ignore
             if(event.action.value) {
               (event.item.layer as FeatureLayer).definitionExpression = feeFilter.toArray().toString().replace(/,/g,' OR '); 
+              document.querySelector('#feeMatTable').setAttribute('where', (event.item.layer as FeatureLayer).definitionExpression);              
               (event.item.layer as FeatureLayer).refresh();
             } else {
               (event.item.layer as FeatureLayer).definitionExpression = '1=1';
+              document.querySelector('#feeMatTable').setAttribute('where','1=1');
               (event.item.layer as FeatureLayer).refresh();
             }
           }
@@ -575,8 +580,8 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
         let formExpand = new Expand({container: document.createElement('div'), mode: 'floating', expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});
         view.ui.add(formExpand, 'top-right');
         view.ui.add([layerExpand, legendExpand], 'bottom-left');
-        let tableExpand = new Expand({container: document.createElement('div'),group:'bottom-right', content: document.getElementById('feeTable')});
-        let propTableExpand = new Expand({container: document.createElement('div'),group:'bottom-right', content: document.getElementById('propTable')});
+        let tableExpand = new Expand({expandIconClass: 'esri-icon-organization', container: document.createElement('div'),group:'bottom-right', content: document.getElementById('feeTable')});
+        let propTableExpand = new Expand({expandIconClass: 'esri-icon-table', container: document.createElement('div'),group:'bottom-right', content: document.getElementById('propTable')});
       
         tableExpand.watch('expanded', expanded => {
           if (expanded) {
