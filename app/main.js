@@ -564,7 +564,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                             }
                         }
                     });
-                    var layerExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: layerList, expanded: true });
+                    var layerExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: layerList, expanded: false });
                     var legendExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new Legend_1.default({ view: view, container: document.createElement('div') }) });
                     var basemapExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new BasemapGallery_1.default({ view: view, container: document.createElement('div') }) });
                     layerExpand.watch('expanded', function (expanded) {
@@ -585,11 +585,11 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                             legendExpand.collapse();
                         }
                     });
-                    var formExpand = new Expand_1.default({ container: document.createElement('div'), mode: 'floating', expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
+                    var formExpand = new Expand_1.default({ container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
                     view.ui.add(formExpand, 'top-right');
                     view.ui.add([layerExpand, legendExpand, basemapExpand], 'bottom-left');
-                    var tableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-organization', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('feeTable') });
-                    var propTableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-table', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('propTable') });
+                    var tableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-organization', mode: 'floating', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('feeTable') });
+                    var propTableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-table', mode: 'floating', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('propTable') });
                     tableExpand.watch('expanded', function (expanded) {
                         if (expanded) {
                             propTableExpand.collapse();

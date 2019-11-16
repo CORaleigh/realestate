@@ -62,13 +62,11 @@
   max-width: 100% !important;
 }
 
-.esri-expand__container {
-  z-index: 100 !important;
-}
 
-.esri-expand__content {
+
+/* .esri-expand__content {
   min-width: 150px !important;
-}
+} */
 .esri-ui-bottom-left, .esri-ui-bottom-right {
   flex-flow: column !important;
 }
@@ -81,6 +79,9 @@
   font-family: "Avenir Next W01","Avenir Next W00","Avenir Next","Avenir","Helvetica Neue",sans-serif !important;
 }
 
+.top-nav {
+  z-index: 0 !important;
+}
 .esri-icon-non-visible::before {
  content: '\e610' !important;
  color: #72A300 !important;
@@ -99,10 +100,12 @@
 
     </style>
     
-    <link rel="stylesheet" href="https://js.arcgis.com/4.13/esri/themes/light/main.css">
     <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.13/esri/themes/light/main.css">
+
+    
     <script>
       var locationPath = location.pathname.replace(/\/[^\/]+$/, "");
       window.dojoConfig = {

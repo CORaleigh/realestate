@@ -545,7 +545,7 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
           }
         }
       });
-      let layerExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:layerList, expanded: true});
+      let layerExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:layerList, expanded: false});
       let legendExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:new Legend({view: view, container: document.createElement('div')})});
       let basemapExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:new BasemapGallery({view: view, container: document.createElement('div')})});
 
@@ -568,11 +568,11 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
 
         }
       });      
-      let formExpand = new Expand({container: document.createElement('div'), mode: 'floating', expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});
+      let formExpand = new Expand({container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});
       view.ui.add(formExpand, 'top-right');
       view.ui.add([layerExpand, legendExpand, basemapExpand], 'bottom-left');
-      let tableExpand = new Expand({expandIconClass: 'esri-icon-organization', container: document.createElement('div'),group:'bottom-right', content: document.getElementById('feeTable')});
-      let propTableExpand = new Expand({expandIconClass: 'esri-icon-table', container: document.createElement('div'),group:'bottom-right', content: document.getElementById('propTable')});
+      let tableExpand = new Expand({expandIconClass: 'esri-icon-organization', mode: 'floating', container: document.createElement('div'),group:'bottom-right', content: document.getElementById('feeTable')});
+      let propTableExpand = new Expand({expandIconClass: 'esri-icon-table', mode: 'floating', container: document.createElement('div'),group:'bottom-right', content: document.getElementById('propTable')});
       tableExpand.watch('expanded', expanded => {
         if (expanded) {
           propTableExpand.collapse();
