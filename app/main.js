@@ -1,11 +1,12 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "esri/widgets/Expand", "esri/WebMap", "esri/views/MapView", "esri/widgets/Search", "esri/widgets/Search/SearchSource", "esri/widgets/FeatureForm", "esri/identity/OAuthInfo", "esri/identity/IdentityManager", "esri/support/actions/ActionButton", "esri/widgets/FeatureForm/FieldGroupConfig", "esri/core/Collection"], function (require, exports, LayerList_1, Legend_1, Expand_1, WebMap_1, MapView_1, Search_1, SearchSource_1, FeatureForm_1, OAuthInfo_1, IdentityManager_1, ActionButton_1, FieldGroupConfig_1, Collection_1) {
+define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "esri/widgets/BasemapGallery", "esri/widgets/Expand", "esri/WebMap", "esri/views/MapView", "esri/widgets/Search", "esri/widgets/Search/SearchSource", "esri/widgets/FeatureForm", "esri/identity/OAuthInfo", "esri/identity/IdentityManager", "esri/support/actions/ActionButton", "esri/widgets/FeatureForm/FieldGroupConfig", "esri/core/Collection"], function (require, exports, LayerList_1, Legend_1, BasemapGallery_1, Expand_1, WebMap_1, MapView_1, Search_1, SearchSource_1, FeatureForm_1, OAuthInfo_1, IdentityManager_1, ActionButton_1, FieldGroupConfig_1, Collection_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     LayerList_1 = __importDefault(LayerList_1);
     Legend_1 = __importDefault(Legend_1);
+    BasemapGallery_1 = __importDefault(BasemapGallery_1);
     Expand_1 = __importDefault(Expand_1);
     WebMap_1 = __importDefault(WebMap_1);
     MapView_1 = __importDefault(MapView_1);
@@ -21,7 +22,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         appId: 'IBzkn4XKa7OGFvYs',
         popup: false
     });
-    var feeFilter = new Collection_1.default([]); //new Collection(["Maintenance_Manager like '%Community Development'","Maintenance_Manager = 'PRCR'","Maintenance_Manager = 'Public Utilities'","Maintenance_Manager = 'Fire Department'","Maintenance_Manager like 'ES/%'","Maintenance_Manager = 'ES/Construction Management'","Maintenance_Manager = 'City Planning'","Maintenance_Manager = 'ES/Stormwater'","Maintenance_Manager = 'Solid Waste Services'","Maintenance_Manager like '%Transportation%'","Maintenance_Manager = 'Convention and Conference Center'"])
+    var feeFilter = new Collection_1.default([]);
     function getUrlParameter(name) {
         name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
         var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -70,6 +71,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
             document.getElementById("btnUpdate").classList.remove('esri-hidden');
             document.getElementById("updateText").classList.add('esri-hidden');
             formExpand.expand();
+            document.getElementById("btnDelete").classList.add('esri-hidden');
             document.getElementById("btnUpdate").setAttribute("value", "CREATE");
         });
     }
@@ -80,10 +82,6 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
             outSpatialReference: { wkid: 102100 },
             returnGeometry: true
         }).then(function (results) {
-            //this.selectionMade.emit(results.features[0]);
-            // if (!this.view) {
-            //   this.createMap(results.features[0]);
-            // }
             var searchResults = results.features.map(function (feature) {
                 var searchResult = {
                     extent: feature.geometry.extent,
@@ -118,12 +116,6 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                     id: "create",
                     className: "esri-icon-edit"
                 });
-                // const template = new PopupTemplate({
-                //   // autocasts as new PopupTemplate()
-                //   title: "Property",
-                //   content: property.popupTemplate.content,
-                //   actions: [copyAction]
-                // });   
                 var template = property.popupTemplate.clone();
                 template.actions.add(copyAction);
                 property.popupTemplate = template;
@@ -296,7 +288,6 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                             })],
                     });
                     view.popup.on("trigger-action", function (event) {
-                        // Execute the measureThis() function if the measure-this action is clicked
                         if (event.action.id === "create") {
                             showCreateForm(view, view.popup.features[0], form, formExpand);
                         }
@@ -309,12 +300,13 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                                     return r.graphic.layer === fee;
                                 });
                                 if (matches.length) {
-                                    console.log(matches[0].graphic);
                                     form.feature = matches[0].graphic;
                                     document.getElementById("form").classList.remove('esri-hidden');
                                     document.getElementById("btnUpdate").classList.remove('esri-hidden');
+                                    document.getElementById("btnDelete").classList.remove('esri-hidden');
                                     document.getElementById("updateText").classList.add('esri-hidden');
                                     formExpand.expand();
+                                    document.getElementById('deleteConfirm').setAttribute('data-oid', form.feature.attributes.OBJECTID);
                                     document.getElementById("btnUpdate").setAttribute("value", "UPDATE");
                                 }
                             }
@@ -336,6 +328,8 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                             document.getElementById("form").classList.add('esri-hidden');
                             document.getElementById("btnUpdate").classList.add('esri-hidden');
                             document.getElementById("updateText").classList.remove('esri-hidden');
+                            formExpand.collapse();
+                            view.popup.close();
                         });
                     });
                     var layerList = new LayerList_1.default({ view: view,
@@ -558,7 +552,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                                 }
                             }
                             //@ts-ignore
-                            if (event.action.value) {
+                            if (feeFilter.length) {
                                 event.item.layer.definitionExpression = feeFilter.toArray().toString().replace(/,/g, ' OR ');
                                 document.querySelector('#feeMatTable').setAttribute('where', event.item.layer.definitionExpression);
                                 event.item.layer.refresh();
@@ -572,19 +566,28 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                     });
                     var layerExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: layerList, expanded: true });
                     var legendExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new Legend_1.default({ view: view, container: document.createElement('div') }) });
+                    var basemapExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new BasemapGallery_1.default({ view: view, container: document.createElement('div') }) });
                     layerExpand.watch('expanded', function (expanded) {
                         if (expanded) {
                             legendExpand.collapse();
+                            basemapExpand.collapse();
                         }
                     });
                     legendExpand.watch('expanded', function (expanded) {
                         if (expanded) {
                             layerExpand.collapse();
+                            basemapExpand.collapse();
+                        }
+                    });
+                    basemapExpand.watch('expanded', function (expanded) {
+                        if (expanded) {
+                            layerExpand.collapse();
+                            legendExpand.collapse();
                         }
                     });
                     var formExpand = new Expand_1.default({ container: document.createElement('div'), mode: 'floating', expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
                     view.ui.add(formExpand, 'top-right');
-                    view.ui.add([layerExpand, legendExpand], 'bottom-left');
+                    view.ui.add([layerExpand, legendExpand, basemapExpand], 'bottom-left');
                     var tableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-organization', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('feeTable') });
                     var propTableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-table', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('propTable') });
                     tableExpand.watch('expanded', function (expanded) {
@@ -608,9 +611,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                     });
                     view.ui.add(propTableExpand, 'bottom-right');
                     document.addEventListener('rowSelected', function (event) {
-                        fee.definitionExpression = feeFilter.toArray().toString().replace(/,/g, ' OR ');
-                        fee.refresh();
-                        fee.queryFeatures({ returnGeometry: true, objectIds: [event.detail.attributes.OBJECTID], outFields: ['*'], outSpatialReference: view.spatialReference }).then(function (featureSet) {
+                        event.detail.layer.queryFeatures({ returnGeometry: true, objectIds: [event.detail.attributes.OBJECTID], outFields: ['*'], outSpatialReference: view.spatialReference }).then(function (featureSet) {
                             view.goTo(featureSet.features);
                         });
                     });
@@ -624,19 +625,41 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                                 form.feature = featureSet.features[0];
                                 document.getElementById("form").classList.remove('esri-hidden');
                                 document.getElementById("btnUpdate").classList.remove('esri-hidden');
+                                document.getElementById("btnDelete").classList.remove('esri-hidden');
                                 document.getElementById("updateText").classList.add('esri-hidden');
                                 formExpand.expand();
                                 document.getElementById("btnUpdate").setAttribute("value", "UPDATE");
+                                document.getElementById('deleteConfirm').setAttribute('data-oid', form.feature.attributes.OBJECTID);
                             }
                             else {
                                 showCreateForm(view, result.result.feature, form, formExpand);
                             }
                         });
-                        document.getElementById("btnUpdate").onclick = function () {
-                            // Fires feature form's submit event.
-                            form.submit();
-                        };
                     });
+                    document.getElementById("btnUpdate").onclick = function () {
+                        form.submit();
+                    };
+                    document.getElementById("btnDelete").onclick = function () {
+                        var modal = document.querySelector("calcite-modal");
+                        //@ts-ignore
+                        modal.open();
+                    };
+                    document.getElementById('deleteConfirm').onclick = function (e) {
+                        fee.applyEdits({ deleteFeatures: [{ attributes: { OBJECTID: document.getElementById('deleteConfirm').dataset.oid } }] }).then(function (result) {
+                            console.log(result);
+                            fee.refresh();
+                            var modal = document.querySelector("calcite-modal");
+                            //@ts-ignore
+                            modal.close();
+                            form.feature = null;
+                            document.getElementById("form").classList.add('esri-hidden');
+                            document.getElementById("btnUpdate").classList.add('esri-hidden');
+                            document.getElementById("btnDelete").classList.add('esri-hidden');
+                            document.getElementById("updateText").classList.remove('esri-hidden');
+                            formExpand.collapse();
+                            view.popup.close();
+                        });
+                    };
                 });
             });
         });

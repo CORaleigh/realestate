@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@esri/calcite-components": "^1.0.0-beta.13",
     "@types/arcgis-js-api": "^4.13.0"
   },
   "devDependencies": {

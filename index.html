@@ -73,10 +73,32 @@
   flex-flow: column !important;
 }
 
+.mdc-data-table__header-cell {
+  font-weight: bold !important;
+}
+.mdc-data-table__cell, .mdc-data-table__header-cell {
+  font-size: 0.775rem !important;
+  font-family: "Avenir Next W01","Avenir Next W00","Avenir Next","Avenir","Helvetica Neue",sans-serif !important;
+}
 
+.esri-icon-non-visible::before {
+ content: '\e610' !important;
+ color: #72A300 !important;
+ font-weight: bolder !important;
+}
+.esri-icon-visible::before {
+  content: '\e611' !important;
+  color: #72A300 !important;
+  font-weight: bolder !important;
+}
+
+.esri-icon-handle-horizontal:before {
+  content: '\e653' !important;
+}
 
 
     </style>
+    
     <link rel="stylesheet" href="https://js.arcgis.com/4.13/esri/themes/light/main.css">
     <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
     <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
@@ -99,9 +121,11 @@
     <script src="https://js.arcgis.com/4.13"></script>
     <script type="module" src="material-table/material-table.esm.js"></script>
     <script nomodule src="material-table/material-table.js"></script>
-
+    <script type="module" src="https://unpkg.com/@esri/calcite-components@1.0.0-beta.13/dist/calcite/calcite.esm.js"></script>
+    <script nomodule="" src="https://unpkg.com/@esri/calcite-components@1.0.0-beta.13/dist/calcite/calcite.js"></script>
   </head>
   <body>
+  
       <header class="top-nav fade-in" *ngIf="loaded">
           <div class="grid-container">
             <div class="column-24">
@@ -112,19 +136,33 @@
                 </a>
               </div>
               <a href="#" class="top-nav-title right">Real Estate Manager</a>
+              
             </div>
           </div>
         </header>    
     <div id="viewDiv"></div>
     <div id="update" class="esri-widget">
-      <span id="updateText" class="update-text">Search for or Select Property</span>
-      <div id="form" class="scroller esri-component esri-hidden"></div>
-      <input
-        type="button"
-        class="esri-button btn-green  esri-hidden"
-        value="CREATE"
-        id="btnUpdate"
-      />
+
+        <span id="updateText" class="update-text">Search for or Select Property</span>
+        <div id="form" class="scroller esri-component esri-hidden"></div>
+        <input
+          type="button"
+          class="esri-button btn-green  esri-hidden"
+          value="CREATE"
+          id="btnUpdate"
+        />   
+
+      <br/>
+
+          <!-- <input
+          type="button"
+          class="esri-button btn-red  esri-hidden"
+          value="DELETE"
+          id="btnDelete"
+        />   -->
+        <a id="btnDelete" class="js-modal-toggle esri-button btn-red esri-hidden" href="#" data-modal="foo"><span>DELETE</span></a>
+
+
     </div>
     <div id="feeTable" class="esri-widget" style="overflow:auto;height: 300px;position: fixed;left:1em;bottom:2em;right:60px" >
     <material-table id="feeMatTable" class="esri-hidden" row-selected="rowSelected" layer-id="0" item-id="94cbf9d8de8e4168ae52223937e5e7dd" where="1=1" fields="Maintenance_Manager,PIN_NUM,REID,SITE_ADDRESS,OWNER,ADDR1,ADDR2,ADDR3,CITY_DECODE,LAND_VAL,BLDG_VAL,TOTAL_VALUE_ASSD,SALE_DATE"></material-table>
@@ -132,6 +170,21 @@
     <div id="propTable" class="esri-widget" style="overflow:auto;height: 300px;position: fixed;left:1em;bottom:2em;right:60px" >
         <material-table id="propMatTable" class="esri-hidden" row-selected="rowSelected" layer-id="0" item-id="08050bf067bb4b20adea4b0b4f0a39e3" where="1=1" fields="PIN_NUM,REID,SITE_ADDRESS,OWNER,ADDR1,ADDR2,ADDR3,CITY_DECODE,LAND_VAL,BLDG_VAL,TOTAL_VALUE_ASSD,SALE_DATE"></material-table>
         </div>    
+
+        <calcite-modal aria-labelledby="modal-title">
+            <h3 slot="header" id="modal-title">Delete Feature</h3>
+            <div slot="content">
+              Are you sure you would like to delete this feature?
+            </div>
+            <calcite-button color="light"  slot="secondary" width="full" >
+              CANCEL
+            </calcite-button>
+            <calcite-button id="deleteConfirm" color="red"  slot="primary" width="full">
+              DELETE
+            </calcite-button>
+          </calcite-modal>  
+
     <script>require(["app/main"]);</script>
+
   </body>
 </html>

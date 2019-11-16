@@ -1,5 +1,6 @@
 import LayerList from "esri/widgets/LayerList";
 import Legend from "esri/widgets/Legend";
+import BasemapGallery from "esri/widgets/BasemapGallery";
 import Expand from "esri/widgets/Expand";
 import WebMap from "esri/WebMap";
 import MapView from "esri/views/MapView";
@@ -13,15 +14,12 @@ import ActionButton from "esri/support/actions/ActionButton";
 import FieldGroupConfig from "esri/widgets/FeatureForm/FieldGroupConfig";
 import Collection from "esri/core/Collection";
 
+
 const info = new OAuthInfo({
   appId: 'IBzkn4XKa7OGFvYs',
   popup: false
 });
-
-let feeFilter:Collection = new Collection([]);//new Collection(["Maintenance_Manager like '%Community Development'","Maintenance_Manager = 'PRCR'","Maintenance_Manager = 'Public Utilities'","Maintenance_Manager = 'Fire Department'","Maintenance_Manager like 'ES/%'","Maintenance_Manager = 'ES/Construction Management'","Maintenance_Manager = 'City Planning'","Maintenance_Manager = 'ES/Stormwater'","Maintenance_Manager = 'Solid Waste Services'","Maintenance_Manager like '%Transportation%'","Maintenance_Manager = 'Convention and Conference Center'"])
-
- 
-
+let feeFilter:Collection = new Collection([]);
 function getUrlParameter(name:string) {
   name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
   let regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
@@ -55,7 +53,6 @@ function showCreateForm(view:MapView, feature:__esri.Graphic, form: FeatureForm,
     returnGeometry: false,
     outFields: ['ZONING']
   }).then(featureSet => {
-    
     if (featureSet.features.length) {
       feature.attributes.Zoning = featureSet.features[0].attributes.ZONING;
     }
@@ -70,6 +67,8 @@ function showCreateForm(view:MapView, feature:__esri.Graphic, form: FeatureForm,
     document.getElementById("btnUpdate").classList.remove('esri-hidden');
     document.getElementById("updateText").classList.add('esri-hidden');
     formExpand.expand();
+    document.getElementById("btnDelete").classList.add('esri-hidden');
+
     document.getElementById("btnUpdate").setAttribute("value", "CREATE");              
   });
 }
@@ -80,10 +79,6 @@ function getResults(params:any, field:string, layer:FeatureLayer) {
     outSpatialReference: {wkid: 102100},
     returnGeometry: true
   }).then((results:any) => {
-    //this.selectionMade.emit(results.features[0]);
-    // if (!this.view) {
-    //   this.createMap(results.features[0]);
-    // }
     let searchResults = results.features.map((feature:any) => {
       let searchResult = {
         extent: feature.geometry.extent,
@@ -112,19 +107,12 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
     let fee = view.map.layers.filter(layer => {
       return layer.title === "City of Raleigh Fee Properties"
     }).getItemAt(0) as FeatureLayer;      
-
     view.whenLayerView(property).then(layerView => {
       const copyAction = new ActionButton({
         title: "Create Real Estate",
         id: "create",
         className: "esri-icon-edit"
       });
-      // const template = new PopupTemplate({
-      //   // autocasts as new PopupTemplate()
-      //   title: "Property",
-      //   content: property.popupTemplate.content,
-      //   actions: [copyAction]
-      // });   
       const template = property.popupTemplate.clone();
       template.actions.add(copyAction);
       property.popupTemplate = template;
@@ -295,7 +283,6 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
           ]})],  
         });
         view.popup.on("trigger-action", function(event) {
-          // Execute the measureThis() function if the measure-this action is clicked
           if (event.action.id === "create") {
             showCreateForm(view, view.popup.features[0], form, formExpand);      
           }
@@ -308,12 +295,15 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
                 return r.graphic.layer === fee;
               });
               if (matches.length) {
-                console.log(matches[0].graphic);
                 form.feature = matches[0].graphic;
                 document.getElementById("form").classList.remove('esri-hidden');
                 document.getElementById("btnUpdate").classList.remove('esri-hidden');
+                document.getElementById("btnDelete").classList.remove('esri-hidden');
+
                 document.getElementById("updateText").classList.add('esri-hidden');
                 formExpand.expand();
+                document.getElementById('deleteConfirm').setAttribute('data-oid', form.feature.attributes.OBJECTID);          
+
                 document.getElementById("btnUpdate").setAttribute("value", "UPDATE");
               }
             }
@@ -334,6 +324,8 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
             document.getElementById("form").classList.add('esri-hidden');
             document.getElementById("btnUpdate").classList.add('esri-hidden');
             document.getElementById("updateText").classList.remove('esri-hidden');
+            formExpand.collapse();
+            view.popup.close();
           });
         })
         let layerList = new LayerList({view: view, 
@@ -426,196 +418,185 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
                 visible: true
               }]
             ]
-            }            
+          }            
+        }
+      });
+      layerList.on('trigger-action', (event) => {
+        if (event.action.id === 'propertyFilter') {
+          //@ts-ignore
+          if(event.action.value) {
+            (event.item.layer as FeatureLayer).definitionExpression = "(((UPPER(OWNER) LIKE '%RALEIGH%') AND (UPPER(OWNER) LIKE '%CITY%') AND (UPPER(OWNER) NOT LIKE '%HOUSING%') AND (UPPER(OWNER) NOT LIKE '%CENTER%') AND (UPPER(REID) <> '0112518')))";
+            //@ts-ignore
+            document.querySelector('#propMatTable').setAttribute('where', (event.item.layer as FeatureLayer).definitionExpression);
+            //@ts-ignore
+            (event.item.layer as FeatureLayer).refresh();
+          } else {
+            (event.item.layer as FeatureLayer).definitionExpression = "1=1"           
+            //@ts-ignore
+            document.querySelector('#propMatTable').setAttribute('where', "1=1");
+            (event.item.layer as FeatureLayer).refresh();
           }
-        });
-        layerList.on('trigger-action', (event) => {
-          if (event.action.id === 'propertyFilter') {
+        } else {
+          if (event.action.id === 'community') {
             //@ts-ignore
             if(event.action.value) {
-              (event.item.layer as FeatureLayer).definitionExpression = "(((UPPER(OWNER) LIKE '%RALEIGH%') AND (UPPER(OWNER) LIKE '%CITY%') AND (UPPER(OWNER) NOT LIKE '%HOUSING%') AND (UPPER(OWNER) NOT LIKE '%CENTER%') AND (UPPER(REID) <> '0112518')))";
-              
-                          //@ts-ignore
-
-              document.querySelector('#propMatTable').setAttribute('where', (event.item.layer as FeatureLayer).definitionExpression);
-                          //@ts-ignore
-
-              (event.item.layer as FeatureLayer).refresh();
+              feeFilter.add("Maintenance_Manager like '%Community Development%'")
             } else {
-              (event.item.layer as FeatureLayer).definitionExpression = "1=1"           
-              //@ts-ignore
-              document.querySelector('#propMatTable').setAttribute('where', "1=1");
-              (event.item.layer as FeatureLayer).refresh();
+              feeFilter.remove("Maintenance_Manager like '%Community Development%'")               
             }
-          } else {
-
-            if (event.action.id === 'community') {
-                          //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager like '%Community Development%'")
-              } else {
-                feeFilter.remove("Maintenance_Manager like '%Community Development%'")               
-              }
-            }
-            if (event.action.id === 'prcr') {
-              //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager = 'PRCR'")
-              } else {
-                feeFilter.remove("Maintenance_Manager = 'PRCR'")               
-              }
-            }
-            if (event.action.id === 'pu') {
-              //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager = 'Public Utilities'")
-              } else {
-                feeFilter.remove("Maintenance_Manager = 'Public Utilities'")               
-              }
-            }
-            if (event.action.id === 'fire') {
-              //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager = 'Fire Department'")
-              } else {
-                feeFilter.remove("Maintenance_Manager = 'Fire Department'")               
-              }
-            }
-            if (event.action.id === 'engineering') {
-              //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager like 'ES/%'")     
-              } else {
-                feeFilter.remove("Maintenance_Manager like 'ES/%'")               
-              }
-            }
-            if (event.action.id === 'construction') {
-              //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager = 'ES/Construction Management'")     
-              } else {
-                feeFilter.remove("Maintenance_Manager = 'ES/Construction Management'")            
-              }
-            }
-            if (event.action.id === 'fo') {
-              //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager = 'ES/Construction Management'")     
-              } else {
-                feeFilter.remove("Maintenance_Manager = 'ES/Construction Management'")            
-              }
-            }
-            if (event.action.id === 'planning') {
-              //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager = 'City Planning'")     
-              } else {
-                feeFilter.remove("Maintenance_Manager = 'City Planning'")            
-              }
-            }
-            if (event.action.id === 'stormwater') {
-              //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager = 'ES/Stormwater'")     
-              } else {
-                feeFilter.remove("Maintenance_Manager = 'ES/Stormwater'")            
-              }
-            }      
-            if (event.action.id === 'sws') {
-              //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager = 'Solid Waste Services'")     
-              } else {
-                feeFilter.remove("Maintenance_Manager = 'Solid Waste Services'")            
-              }
-            }
-            if (event.action.id === 'transportation') {
-              //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager like '%Transportation%'")     
-              } else {
-                feeFilter.remove("Maintenance_Manager like '%Transportation%'")             
-              }
-            }
-            if (event.action.id === 'rcc') {
-              //@ts-ignore
-              if(event.action.value) {
-                feeFilter.add("Maintenance_Manager = 'Convention and Conference Center'")     
-              } else {
-                feeFilter.remove("Maintenance_Manager = 'Convention and Conference Center'")            
-              }
-            }
-                                                                                                       
+          }
+          if (event.action.id === 'prcr') {
             //@ts-ignore
             if(event.action.value) {
-              (event.item.layer as FeatureLayer).definitionExpression = feeFilter.toArray().toString().replace(/,/g,' OR '); 
-              document.querySelector('#feeMatTable').setAttribute('where', (event.item.layer as FeatureLayer).definitionExpression);              
-              (event.item.layer as FeatureLayer).refresh();
+              feeFilter.add("Maintenance_Manager = 'PRCR'")
             } else {
-              (event.item.layer as FeatureLayer).definitionExpression = '1=1';
-              document.querySelector('#feeMatTable').setAttribute('where','1=1');
-              (event.item.layer as FeatureLayer).refresh();
+              feeFilter.remove("Maintenance_Manager = 'PRCR'")               
             }
           }
-
-
-        });
-        let layerExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:layerList, expanded: true});
-        
-        
-        
-        let legendExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:new Legend({view: view, container: document.createElement('div')})});
-        layerExpand.watch('expanded', expanded => {
-          if (expanded) {
-            legendExpand.collapse();
-          }
-        });
-        legendExpand.watch('expanded', expanded => {
-          if (expanded) {
-            layerExpand.collapse();
-          }
-        });
-
-
-        let formExpand = new Expand({container: document.createElement('div'), mode: 'floating', expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});
-        view.ui.add(formExpand, 'top-right');
-        view.ui.add([layerExpand, legendExpand], 'bottom-left');
-        let tableExpand = new Expand({expandIconClass: 'esri-icon-organization', container: document.createElement('div'),group:'bottom-right', content: document.getElementById('feeTable')});
-        let propTableExpand = new Expand({expandIconClass: 'esri-icon-table', container: document.createElement('div'),group:'bottom-right', content: document.getElementById('propTable')});
-      
-        tableExpand.watch('expanded', expanded => {
-          if (expanded) {
-            propTableExpand.collapse();
-          
-            document.querySelector('#feeMatTable').classList.remove('esri-hidden');
-          } else {
-
-            document.querySelector('#feeMatTable').classList.add('esri-hidden');
-          }
-        });
-        view.ui.add(tableExpand, 'bottom-right');
-
-        propTableExpand.watch('expanded', expanded => {
-          if (expanded) {
-
-            tableExpand.collapse();
-
-            document.querySelector('#propMatTable').classList.remove('esri-hidden');
-          } else {
-
-            document.querySelector('#propMatTable').classList.add('esri-hidden');
-          }
-        });        
-        view.ui.add(propTableExpand, 'bottom-right');
-
-        document.addEventListener('rowSelected', (event:any) => {
-          fee.definitionExpression = feeFilter.toArray().toString().replace(/,/g,' OR '); 
-          fee.refresh();
-
-          fee.queryFeatures({returnGeometry: true, objectIds:[event.detail.attributes.OBJECTID], outFields:['*'], outSpatialReference:view.spatialReference}).then(
-            featureSet => {
-              view.goTo(featureSet.features);
+          if (event.action.id === 'pu') {
+            //@ts-ignore
+            if(event.action.value) {
+              feeFilter.add("Maintenance_Manager = 'Public Utilities'")
+            } else {
+              feeFilter.remove("Maintenance_Manager = 'Public Utilities'")               
             }
+          }
+          if (event.action.id === 'fire') {
+            //@ts-ignore
+            if(event.action.value) {
+              feeFilter.add("Maintenance_Manager = 'Fire Department'")
+            } else {
+              feeFilter.remove("Maintenance_Manager = 'Fire Department'")               
+            }
+          }
+          if (event.action.id === 'engineering') {
+            //@ts-ignore
+            if(event.action.value) {
+              feeFilter.add("Maintenance_Manager like 'ES/%'")     
+            } else {
+              feeFilter.remove("Maintenance_Manager like 'ES/%'")               
+            }
+          }
+          if (event.action.id === 'construction') {
+            //@ts-ignore
+            if(event.action.value) {
+              feeFilter.add("Maintenance_Manager = 'ES/Construction Management'")     
+            } else {
+              feeFilter.remove("Maintenance_Manager = 'ES/Construction Management'")            
+            }
+          }
+          if (event.action.id === 'fo') {
+            //@ts-ignore
+            if(event.action.value) {
+              feeFilter.add("Maintenance_Manager = 'ES/Construction Management'")     
+            } else {
+              feeFilter.remove("Maintenance_Manager = 'ES/Construction Management'")            
+            }
+          }
+          if (event.action.id === 'planning') {
+            //@ts-ignore
+            if(event.action.value) {
+              feeFilter.add("Maintenance_Manager = 'City Planning'")     
+            } else {
+              feeFilter.remove("Maintenance_Manager = 'City Planning'")            
+            }
+          }
+          if (event.action.id === 'stormwater') {
+            //@ts-ignore
+            if(event.action.value) {
+              feeFilter.add("Maintenance_Manager = 'ES/Stormwater'")     
+            } else {
+              feeFilter.remove("Maintenance_Manager = 'ES/Stormwater'")            
+            }
+          }      
+          if (event.action.id === 'sws') {
+            //@ts-ignore
+            if(event.action.value) {
+              feeFilter.add("Maintenance_Manager = 'Solid Waste Services'")     
+            } else {
+              feeFilter.remove("Maintenance_Manager = 'Solid Waste Services'")            
+            }
+          }
+          if (event.action.id === 'transportation') {
+            //@ts-ignore
+            if(event.action.value) {
+              feeFilter.add("Maintenance_Manager like '%Transportation%'")     
+            } else {
+              feeFilter.remove("Maintenance_Manager like '%Transportation%'")             
+            }
+          }
+          if (event.action.id === 'rcc') {
+            //@ts-ignore
+            if(event.action.value) {
+              feeFilter.add("Maintenance_Manager = 'Convention and Conference Center'")     
+            } else {
+              feeFilter.remove("Maintenance_Manager = 'Convention and Conference Center'")            
+            }
+          }
+          //@ts-ignore
+          if (feeFilter.length) {
+            (event.item.layer as FeatureLayer).definitionExpression = feeFilter.toArray().toString().replace(/,/g,' OR '); 
+            document.querySelector('#feeMatTable').setAttribute('where', (event.item.layer as FeatureLayer).definitionExpression);              
+            (event.item.layer as FeatureLayer).refresh();
+          } else {
+            (event.item.layer as FeatureLayer).definitionExpression = '1=1';
+            document.querySelector('#feeMatTable').setAttribute('where','1=1');
+            (event.item.layer as FeatureLayer).refresh();
+          }
+        }
+      });
+      let layerExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:layerList, expanded: true});
+      let legendExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:new Legend({view: view, container: document.createElement('div')})});
+      let basemapExpand = new Expand({container: document.createElement('div'),group:'bottom-left', content:new BasemapGallery({view: view, container: document.createElement('div')})});
+
+      layerExpand.watch('expanded', expanded => {
+        if (expanded) {
+          legendExpand.collapse();
+          basemapExpand.collapse();
+        }
+      });
+      legendExpand.watch('expanded', expanded => {
+        if (expanded) {
+          layerExpand.collapse();
+          basemapExpand.collapse();
+        }
+      });
+      basemapExpand.watch('expanded', expanded => {
+        if (expanded) {
+          layerExpand.collapse();
+          legendExpand.collapse();
+
+        }
+      });      
+      let formExpand = new Expand({container: document.createElement('div'), mode: 'floating', expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});
+      view.ui.add(formExpand, 'top-right');
+      view.ui.add([layerExpand, legendExpand, basemapExpand], 'bottom-left');
+      let tableExpand = new Expand({expandIconClass: 'esri-icon-organization', container: document.createElement('div'),group:'bottom-right', content: document.getElementById('feeTable')});
+      let propTableExpand = new Expand({expandIconClass: 'esri-icon-table', container: document.createElement('div'),group:'bottom-right', content: document.getElementById('propTable')});
+      tableExpand.watch('expanded', expanded => {
+        if (expanded) {
+          propTableExpand.collapse();
+          document.querySelector('#feeMatTable').classList.remove('esri-hidden');
+        } else {
+          document.querySelector('#feeMatTable').classList.add('esri-hidden');
+        }
+      });
+      view.ui.add(tableExpand, 'bottom-right');
+      propTableExpand.watch('expanded', expanded => {
+        if (expanded) {
+          tableExpand.collapse();
+          document.querySelector('#propMatTable').classList.remove('esri-hidden');
+        } else {
+          document.querySelector('#propMatTable').classList.add('esri-hidden');
+        }
+      });        
+      view.ui.add(propTableExpand, 'bottom-right');
+      document.addEventListener('rowSelected', (event:any) => {
+        
+        event.detail.layer.queryFeatures({returnGeometry: true, objectIds:[event.detail.attributes.OBJECTID], outFields:['*'], outSpatialReference:view.spatialReference}).then(
+          (featureSet:any) => {
+            view.goTo(featureSet.features);
+          }
           )
         });     
         search.on('select-result', result => {
@@ -628,18 +609,43 @@ esriId.checkSignInStatus(info.portalUrl + '/sharing').then(event => {
             form.feature = featureSet.features[0];
             document.getElementById("form").classList.remove('esri-hidden');
             document.getElementById("btnUpdate").classList.remove('esri-hidden');
+            document.getElementById("btnDelete").classList.remove('esri-hidden');
+
             document.getElementById("updateText").classList.add('esri-hidden');
             formExpand.expand();
             document.getElementById("btnUpdate").setAttribute("value", "UPDATE");
+            document.getElementById('deleteConfirm').setAttribute('data-oid', form.feature.attributes.OBJECTID);          
           } else {
             showCreateForm(view, result.result.feature, form, formExpand);
           }
         });
-        document.getElementById("btnUpdate").onclick = () => {
-          // Fires feature form's submit event.
-          form.submit();
-        };        
-      });            
+             
+      });   
+      document.getElementById("btnUpdate").onclick = () => {
+        form.submit();
+      };   
+      document.getElementById("btnDelete").onclick = () => {
+        const modal = document.querySelector("calcite-modal");
+        //@ts-ignore
+        modal.open();
+      };       
+      document.getElementById('deleteConfirm').onclick = (e) => {
+        fee.applyEdits({deleteFeatures:[{attributes:{OBJECTID:document.getElementById('deleteConfirm').dataset.oid }}]}).then(result => {
+          console.log(result);
+          fee.refresh();
+          const modal = document.querySelector("calcite-modal");
+          //@ts-ignore
+          modal.close();   
+          form.feature = null;
+          document.getElementById("form").classList.add('esri-hidden');
+          document.getElementById("btnUpdate").classList.add('esri-hidden');
+          document.getElementById("btnDelete").classList.add('esri-hidden');
+
+          document.getElementById("updateText").classList.remove('esri-hidden');    
+          formExpand.collapse();   
+          view.popup.close();          
+        })
+      }
     });
   });
 });
