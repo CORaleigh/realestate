@@ -600,10 +600,22 @@ function mapViewClicked(view: MapView, layer: FeatureLayer, event:__esri.ViewCli
     }
   });
 }
-function rowSelected(detail:any, view:MapView) {
+function rowSelected(detail:any, view:MapView, form:FeatureForm, expand: Expand) {
   detail.layer.queryFeatures({returnGeometry: true, objectIds:[detail.attributes.OBJECTID], outFields:['*'], outSpatialReference:view.spatialReference}).then(
     (featureSet:any) => {
       view.goTo(featureSet.features);
+      
+      if (detail.layer.title === "City of Raleigh Fee Properties View") {
+        
+        form.feature = featureSet.features[0];
+        document.getElementById("form").classList.remove('esri-hidden');
+        document.getElementById("btnUpdate").classList.remove('esri-hidden');
+        document.getElementById("btnDelete").classList.remove('esri-hidden');
+        document.getElementById("updateText").classList.add('esri-hidden');
+        expand.expand();
+        document.getElementById("btnUpdate").setAttribute("value", "UPDATE");
+        document.getElementById('deleteConfirm').setAttribute('data-oid', form.feature.attributes.OBJECTID);  
+      }
     }
     );
   }
@@ -624,6 +636,7 @@ function rowSelected(detail:any, view:MapView) {
     })
   }
   function feeLoaded(view:MapView,layerView:__esri.FeatureLayerView, search:Search) {
+    layerView.layer.popupEnabled = false;
     const form = loadForm(view, layerView.layer);
     let formExpand = new Expand({container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});
     view.ui.add(formExpand, 'top-right');
@@ -639,7 +652,7 @@ function rowSelected(detail:any, view:MapView) {
     })
     loadWidgets(view);
     loadTables(view);  
-    document.addEventListener('rowSelected', (event:any) => rowSelected(event.detail, view));     
+    document.addEventListener('rowSelected', (event:any) => rowSelected(event.detail, view, form, formExpand));     
     search.on('select-result', result => {
       searchResult(result, view, layerView.layer, form,formExpand);
     });   

@@ -627,9 +627,19 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
             }
         });
     }
-    function rowSelected(detail, view) {
+    function rowSelected(detail, view, form, expand) {
         detail.layer.queryFeatures({ returnGeometry: true, objectIds: [detail.attributes.OBJECTID], outFields: ['*'], outSpatialReference: view.spatialReference }).then(function (featureSet) {
             view.goTo(featureSet.features);
+            if (detail.layer.title === "City of Raleigh Fee Properties View") {
+                form.feature = featureSet.features[0];
+                document.getElementById("form").classList.remove('esri-hidden');
+                document.getElementById("btnUpdate").classList.remove('esri-hidden');
+                document.getElementById("btnDelete").classList.remove('esri-hidden');
+                document.getElementById("updateText").classList.add('esri-hidden');
+                expand.expand();
+                document.getElementById("btnUpdate").setAttribute("value", "UPDATE");
+                document.getElementById('deleteConfirm').setAttribute('data-oid', form.feature.attributes.OBJECTID);
+            }
         });
     }
     function deleteFeature(layer, form, expand, view) {
@@ -649,6 +659,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         });
     }
     function feeLoaded(view, layerView, search) {
+        layerView.layer.popupEnabled = false;
         var form = loadForm(view, layerView.layer);
         var formExpand = new Expand_1.default({ container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
         view.ui.add(formExpand, 'top-right');
@@ -664,7 +675,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         });
         loadWidgets(view);
         loadTables(view);
-        document.addEventListener('rowSelected', function (event) { return rowSelected(event.detail, view); });
+        document.addEventListener('rowSelected', function (event) { return rowSelected(event.detail, view, form, formExpand); });
         search.on('select-result', function (result) {
             searchResult(result, view, layerView.layer, form, formExpand);
         });
