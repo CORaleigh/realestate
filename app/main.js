@@ -627,6 +627,27 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
             }
         });
     }
+    function rowSelected(detail, view) {
+        detail.layer.queryFeatures({ returnGeometry: true, objectIds: [detail.attributes.OBJECTID], outFields: ['*'], outSpatialReference: view.spatialReference }).then(function (featureSet) {
+            view.goTo(featureSet.features);
+        });
+    }
+    function deleteFeature(layer, form, expand, view) {
+        layer.applyEdits({ deleteFeatures: [{ attributes: { OBJECTID: document.getElementById('deleteConfirm').dataset.oid } }] }).then(function (result) {
+            console.log(result);
+            layer.refresh();
+            var modal = document.querySelector("calcite-modal");
+            //@ts-ignore
+            modal.close();
+            form.feature = null;
+            document.getElementById("form").classList.add('esri-hidden');
+            document.getElementById("btnUpdate").classList.add('esri-hidden');
+            document.getElementById("btnDelete").classList.add('esri-hidden');
+            document.getElementById("updateText").classList.remove('esri-hidden');
+            expand.collapse();
+            view.popup.close();
+        });
+    }
     function feeLoaded(view, layerView, search) {
         var form = loadForm(view, layerView.layer);
         var formExpand = new Expand_1.default({ container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
@@ -643,11 +664,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         });
         loadWidgets(view);
         loadTables(view);
-        document.addEventListener('rowSelected', function (event) {
-            event.detail.layer.queryFeatures({ returnGeometry: true, objectIds: [event.detail.attributes.OBJECTID], outFields: ['*'], outSpatialReference: view.spatialReference }).then(function (featureSet) {
-                view.goTo(featureSet.features);
-            });
-        });
+        document.addEventListener('rowSelected', function (event) { return rowSelected(event.detail, view); });
         search.on('select-result', function (result) {
             searchResult(result, view, layerView.layer, form, formExpand);
         });
@@ -659,22 +676,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
             //@ts-ignore
             modal.open();
         };
-        document.getElementById('deleteConfirm').onclick = function (e) {
-            layerView.layer.applyEdits({ deleteFeatures: [{ attributes: { OBJECTID: document.getElementById('deleteConfirm').dataset.oid } }] }).then(function (result) {
-                console.log(result);
-                layerView.layer.refresh();
-                var modal = document.querySelector("calcite-modal");
-                //@ts-ignore
-                modal.close();
-                form.feature = null;
-                document.getElementById("form").classList.add('esri-hidden');
-                document.getElementById("btnUpdate").classList.add('esri-hidden');
-                document.getElementById("btnDelete").classList.add('esri-hidden');
-                document.getElementById("updateText").classList.remove('esri-hidden');
-                formExpand.collapse();
-                view.popup.close();
-            });
-        };
+        document.getElementById('deleteConfirm').onclick = function (e) { return deleteFeature(layerView.layer, form, formExpand, view); };
     }
     function viewLoaded(view) {
         var property = getLayer(view, 'Property Boundaries');

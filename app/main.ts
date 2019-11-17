@@ -570,7 +570,6 @@ function getLayer(view:MapView, title:string) {
   }).getItemAt(0) as FeatureLayer;
 }
 function propertyLoaded(view:MapView,layerView:__esri.FeatureLayerView, fee:FeatureLayer) {
-  
   const copyAction = new ActionButton({
     title: "Create Real Estate",
     id: "create",
@@ -581,7 +580,6 @@ function propertyLoaded(view:MapView,layerView:__esri.FeatureLayerView, fee:Feat
   layerView.layer.popupTemplate = template;
   const search = loadSearch(view, layerView.layer);
   view.whenLayerView(fee).then(layerView => feeLoaded(view, layerView, search));  
-
 }
 function mapViewClicked(view: MapView, layer: FeatureLayer, event:__esri.ViewClickEvent, form:FeatureForm, expand:Expand) {
   view.hitTest(view.toScreen(event.mapPoint)).then(result => {
@@ -602,29 +600,46 @@ function mapViewClicked(view: MapView, layer: FeatureLayer, event:__esri.ViewCli
     }
   });
 }
-function feeLoaded(view:MapView,layerView:__esri.FeatureLayerView, search:Search) {
-  const form = loadForm(view, layerView.layer);
-  let formExpand = new Expand({container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});
-  view.ui.add(formExpand, 'top-right');
-  view.popup.on("trigger-action", function(event) {
-    if (event.action.id === "create") {
-      showCreateForm(view, view.popup.features[0], form, formExpand);      
+function rowSelected(detail:any, view:MapView) {
+  detail.layer.queryFeatures({returnGeometry: true, objectIds:[detail.attributes.OBJECTID], outFields:['*'], outSpatialReference:view.spatialReference}).then(
+    (featureSet:any) => {
+      view.goTo(featureSet.features);
     }
-  });    
-  layerView.layer.outFields = ['*'];
-  view.on('click', (event) => mapViewClicked(view, layerView.layer, event, form, formExpand));
-  form.on('submit', () => {
-    formSubmitted(view, form, layerView.layer, formExpand);
-  })
-  loadWidgets(view);
-  loadTables(view);  
-  document.addEventListener('rowSelected', (event:any) => {
-    event.detail.layer.queryFeatures({returnGeometry: true, objectIds:[event.detail.attributes.OBJECTID], outFields:['*'], outSpatialReference:view.spatialReference}).then(
-      (featureSet:any) => {
-        view.goTo(featureSet.features);
+    );
+  }
+  function deleteFeature(layer:FeatureLayer, form:FeatureForm, expand:Expand, view:MapView) {
+    layer.applyEdits({deleteFeatures:[{attributes:{OBJECTID:document.getElementById('deleteConfirm').dataset.oid }}]}).then(result => {
+      console.log(result);
+      layer.refresh();
+      const modal = document.querySelector("calcite-modal");
+      //@ts-ignore
+      modal.close();   
+      form.feature = null;
+      document.getElementById("form").classList.add('esri-hidden');
+      document.getElementById("btnUpdate").classList.add('esri-hidden');
+      document.getElementById("btnDelete").classList.add('esri-hidden');
+      document.getElementById("updateText").classList.remove('esri-hidden');    
+      expand.collapse();   
+      view.popup.close();          
+    })
+  }
+  function feeLoaded(view:MapView,layerView:__esri.FeatureLayerView, search:Search) {
+    const form = loadForm(view, layerView.layer);
+    let formExpand = new Expand({container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});
+    view.ui.add(formExpand, 'top-right');
+    view.popup.on("trigger-action", function(event) {
+      if (event.action.id === "create") {
+        showCreateForm(view, view.popup.features[0], form, formExpand);      
       }
-      )
-    });     
+    });    
+    layerView.layer.outFields = ['*'];
+    view.on('click', (event) => mapViewClicked(view, layerView.layer, event, form, formExpand));
+    form.on('submit', () => {
+      formSubmitted(view, form, layerView.layer, formExpand);
+    })
+    loadWidgets(view);
+    loadTables(view);  
+    document.addEventListener('rowSelected', (event:any) => rowSelected(event.detail, view));     
     search.on('select-result', result => {
       searchResult(result, view, layerView.layer, form,formExpand);
     });   
@@ -636,30 +651,12 @@ function feeLoaded(view:MapView,layerView:__esri.FeatureLayerView, search:Search
       //@ts-ignore
       modal.open();
     };       
-    document.getElementById('deleteConfirm').onclick = (e) => {
-      layerView.layer.applyEdits({deleteFeatures:[{attributes:{OBJECTID:document.getElementById('deleteConfirm').dataset.oid }}]}).then(result => {
-        console.log(result);
-        layerView.layer.refresh();
-        const modal = document.querySelector("calcite-modal");
-        //@ts-ignore
-        modal.close();   
-        form.feature = null;
-        document.getElementById("form").classList.add('esri-hidden');
-        document.getElementById("btnUpdate").classList.add('esri-hidden');
-        document.getElementById("btnDelete").classList.add('esri-hidden');
-        document.getElementById("updateText").classList.remove('esri-hidden');    
-        formExpand.collapse();   
-        view.popup.close();          
-      })
-    }
+    document.getElementById('deleteConfirm').onclick = (e) => deleteFeature(layerView.layer, form, formExpand, view);
   }
   function viewLoaded(view:MapView) {
-    
     let property = getLayer(view, 'Property Boundaries');
     let fee = getLayer(view, "City of Raleigh Fee Properties");
     view.whenLayerView(property).then(layerView => propertyLoaded(view, layerView, fee));
-    
-    
   }
   function signedIn(event:any) {
     const webMap = new WebMap({portalItem: {id: "473e977864324dcf8c6ffbdfa1bcc92f"}});
@@ -676,4 +673,3 @@ function feeLoaded(view:MapView,layerView:__esri.FeatureLayerView, search:Search
   esriId.checkSignInStatus(info.portalUrl + '/sharing').then(signedIn).catch(() => {
     esriId.getCredential(info.portalUrl + '/sharing');
   });
-  
