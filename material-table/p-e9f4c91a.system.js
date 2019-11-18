@@ -1,1 +1,0 @@
-System.register(["./p-e7818b7c.system.js"],(function(){"use strict";var e,t;return{setters:[function(r){e=r.p;t=r.b}],execute:function(){e().then((function(e){return t([["p-1yji2iz4.system",[[0,"material-table",{itemId:[1025,"item-id"],layerId:[1026,"layer-id"],fields:[1025],where:[1025],headers:[32],features:[32]}]]]],e)}))}}}));
