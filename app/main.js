@@ -663,6 +663,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         var form = loadForm(view, layerView.layer);
         var formExpand = new Expand_1.default({ container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
         view.ui.add(formExpand, 'top-right');
+        document.getElementById("updateText").classList.remove('esri-hidden');
         view.popup.on("trigger-action", function (event) {
             if (event.action.id === "create") {
                 showCreateForm(view, view.popup.features[0], form, formExpand);
