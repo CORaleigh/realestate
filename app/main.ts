@@ -675,6 +675,13 @@ function rowSelected(detail:any, view:MapView, form:FeatureForm, expand: Expand)
 
     let property = getLayer(view, 'Property Boundaries');
     let fee = getLayer(view, "City of Raleigh Fee Properties");
+    let fields:any = [];
+    property.popupTemplate
+    .fieldInfos.forEach(field => {
+      fields.push(field.fieldName);
+    });
+    document.querySelector('#propMatTable').setAttribute('fields', fields.toString());
+
     document.querySelector('#propMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
     document.querySelector('#feeMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));  
     view.watch('stationary', (event) => {

@@ -694,6 +694,12 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
     function viewLoaded(view) {
         var property = getLayer(view, 'Property Boundaries');
         var fee = getLayer(view, "City of Raleigh Fee Properties");
+        var fields = [];
+        property.popupTemplate
+            .fieldInfos.forEach(function (field) {
+            fields.push(field.fieldName);
+        });
+        document.querySelector('#propMatTable').setAttribute('fields', fields.toString());
         document.querySelector('#propMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
         document.querySelector('#feeMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
         view.watch('stationary', function (event) {
