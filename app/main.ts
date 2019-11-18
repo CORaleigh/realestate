@@ -64,6 +64,7 @@ function showCreateForm(view:MapView, feature:__esri.Graphic, form: FeatureForm,
     document.getElementById("form").classList.remove('esri-hidden');
     document.getElementById("btnUpdate").classList.remove('esri-hidden');
     document.getElementById("updateText").classList.add('esri-hidden');
+
     formExpand.expand();
     document.getElementById("btnDelete").classList.add('esri-hidden');
     document.getElementById("btnUpdate").setAttribute("value", "CREATE");              
@@ -636,6 +637,8 @@ function rowSelected(detail:any, view:MapView, form:FeatureForm, expand: Expand)
     })
   }
   function feeLoaded(view:MapView,layerView:__esri.FeatureLayerView, search:Search) {
+    document.getElementById("update").classList.remove('esri-hidden');
+
     layerView.layer.popupEnabled = false;
     const form = loadForm(view, layerView.layer);
     let formExpand = new Expand({container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});
@@ -669,6 +672,7 @@ function rowSelected(detail:any, view:MapView, form:FeatureForm, expand: Expand)
     document.getElementById('deleteConfirm').onclick = (e) => deleteFeature(layerView.layer, form, formExpand, view);
   }
   function viewLoaded(view:MapView) {
+
     let property = getLayer(view, 'Property Boundaries');
     let fee = getLayer(view, "City of Raleigh Fee Properties");
     document.querySelector('#propMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
@@ -681,6 +685,8 @@ function rowSelected(detail:any, view:MapView, form:FeatureForm, expand: Expand)
      }      
   
     })      
+
+
     view.whenLayerView(property).then(layerView => propertyLoaded(view, layerView, fee));
   }
   function signedIn(event:any) {

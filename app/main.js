@@ -659,6 +659,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         });
     }
     function feeLoaded(view, layerView, search) {
+        document.getElementById("update").classList.remove('esri-hidden');
         layerView.layer.popupEnabled = false;
         var form = loadForm(view, layerView.layer);
         var formExpand = new Expand_1.default({ container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
