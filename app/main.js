@@ -628,6 +628,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         });
     }
     function rowSelected(detail, view, form, expand) {
+        debugger;
         detail.layer.queryFeatures({ returnGeometry: true, objectIds: [detail.attributes.OBJECTID], outFields: ['*'], outSpatialReference: view.spatialReference }).then(function (featureSet) {
             view.goTo(featureSet.features);
             if (detail.layer.title === "City of Raleigh Fee Properties View") {
@@ -697,9 +698,18 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         var fields = [];
         property.popupTemplate
             .fieldInfos.forEach(function (field) {
-            fields.push(field.fieldName);
+            if (field.visible) {
+                fields.push(field.fieldName);
+            }
         });
         document.querySelector('#propMatTable').setAttribute('fields', fields.toString());
+        fee.popupTemplate
+            .fieldInfos.forEach(function (field) {
+            if (field.visible) {
+                fields.push(field.fieldName);
+            }
+        });
+        document.querySelector('#feeMatTable').setAttribute('fields', fields.toString());
         document.querySelector('#propMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
         document.querySelector('#feeMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
         view.watch('stationary', function (event) {

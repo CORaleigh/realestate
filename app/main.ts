@@ -602,6 +602,7 @@ function mapViewClicked(view: MapView, layer: FeatureLayer, event:__esri.ViewCli
   });
 }
 function rowSelected(detail:any, view:MapView, form:FeatureForm, expand: Expand) {
+  debugger
   detail.layer.queryFeatures({returnGeometry: true, objectIds:[detail.attributes.OBJECTID], outFields:['*'], outSpatialReference:view.spatialReference}).then(
     (featureSet:any) => {
       view.goTo(featureSet.features);
@@ -678,10 +679,20 @@ function rowSelected(detail:any, view:MapView, form:FeatureForm, expand: Expand)
     let fields:any = [];
     property.popupTemplate
     .fieldInfos.forEach(field => {
-      fields.push(field.fieldName);
+      if (field.visible) {
+        fields.push(field.fieldName);
+      }
     });
+    
     document.querySelector('#propMatTable').setAttribute('fields', fields.toString());
-
+    fee.popupTemplate
+    .fieldInfos.forEach(field => {
+      if (field.visible) {
+        fields.push(field.fieldName);
+      }
+    });
+    
+    document.querySelector('#feeMatTable').setAttribute('fields', fields.toString());
     document.querySelector('#propMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
     document.querySelector('#feeMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));  
     view.watch('stationary', (event) => {
