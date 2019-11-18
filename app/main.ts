@@ -671,6 +671,16 @@ function rowSelected(detail:any, view:MapView, form:FeatureForm, expand: Expand)
   function viewLoaded(view:MapView) {
     let property = getLayer(view, 'Property Boundaries');
     let fee = getLayer(view, "City of Raleigh Fee Properties");
+    document.querySelector('#propMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
+    document.querySelector('#feeMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));  
+    view.watch('stationary', (event) => {
+     if(event) {
+
+      document.querySelector('#propMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
+      document.querySelector('#feeMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));    
+     }      
+  
+    })      
     view.whenLayerView(property).then(layerView => propertyLoaded(view, layerView, fee));
   }
   function signedIn(event:any) {
@@ -681,7 +691,11 @@ function rowSelected(detail:any, view:MapView, form:FeatureForm, expand: Expand)
       center: [-78.65, 35.8],
       zoom: 13
     });
+    
+
+
     view.ui.remove('zoom');
+
     view.when(viewLoaded);
   }
   esriId.registerOAuthInfos([info]);

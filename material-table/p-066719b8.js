@@ -1,0 +1,1 @@
+import{h as e}from"./p-443359a0.js";import{createProviderConsumer as r}from"@stencil/state-tunnel";const o=r({requestedDropdownGroup:"",requestedDropdownItem:""},(r,o)=>e("context-consumer",{subscribe:r,renderer:o}));export{o as D};

@@ -1,0 +1,1 @@
+import{h as e}from"./p-443359a0.js";import{createProviderConsumer as r}from"@stencil/state-tunnel";const t=r({currentAlert:"",queueLength:0},(r,t)=>e("context-consumer",{subscribe:r,renderer:t}));export{t as A};
