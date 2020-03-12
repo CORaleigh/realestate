@@ -119,10 +119,7 @@ function loadSearch(view:MapView, layer:FeatureLayer) {
     sources: [reidSource, addrSource]
   });
   view.ui.add(search, 'top-left');
-  let reid = getUrlParameter('reid');
-  if (reid) {
-    search.search(getUrlParameter('reid'));
-  }  
+
   return search;
 }
 function searchResult(result:__esri.SearchSelectResultEvent, view:MapView, fee:FeatureLayer, form:FeatureForm, expand:Expand) {
@@ -186,6 +183,10 @@ function loadForm(view:MapView, layer:FeatureLayer) {
         name: "Private_Comments",
         label: "Private Comments",
         editorType: "text-area"
+      },
+      {
+        name: "COUNCIL_DIST",
+        label: "Council District"
       }
     ]}),
     new FieldGroupConfig({
@@ -639,7 +640,10 @@ function rowSelected(detail:any, view:MapView, form:FeatureForm, expand: Expand)
   }
   function feeLoaded(view:MapView,layerView:__esri.FeatureLayerView, search:Search) {
     document.getElementById("update").classList.remove('esri-hidden');
-
+    let reid = getUrlParameter('reid');
+    if (reid) {
+      search.search(getUrlParameter('reid'));
+    }  
     layerView.layer.popupEnabled = false;
     const form = loadForm(view, layerView.layer);
     let formExpand = new Expand({container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true,group:'right', content:document.getElementById('update')});

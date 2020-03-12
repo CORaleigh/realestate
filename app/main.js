@@ -18,15 +18,15 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
     ActionButton_1 = __importDefault(ActionButton_1);
     FieldGroupConfig_1 = __importDefault(FieldGroupConfig_1);
     Collection_1 = __importDefault(Collection_1);
-    var info = new OAuthInfo_1.default({
+    const info = new OAuthInfo_1.default({
         appId: 'IBzkn4XKa7OGFvYs',
         popup: false
     });
-    var feeFilter = new Collection_1.default([]);
+    let feeFilter = new Collection_1.default([]);
     function getUrlParameter(name) {
         name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-        var results = regex.exec(location.search);
+        let regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        let results = regex.exec(location.search);
         return results === null ? null : decodeURIComponent(results[1].replace(/\+/g, ' '));
     }
     ;
@@ -39,8 +39,8 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
             returnDistinctValues: true,
             returnGeometry: false,
             orderByFields: [field]
-        }).then(function (results) {
-            return results.features.map(function (feature) {
+        }).then((results) => {
+            return results.features.map((feature) => {
                 return {
                     key: field,
                     text: feature.attributes[field],
@@ -50,13 +50,13 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         });
     }
     function showCreateForm(view, feature, form, formExpand) {
-        var zoning = view.map.layers.filter(function (layer) {
+        const zoning = view.map.layers.filter(layer => {
             return layer.title === 'Raleigh Zoning';
         }).getItemAt(0);
         zoning.queryFeatures({ geometry: feature.geometry.centroid,
             returnGeometry: false,
             outFields: ['ZONING']
-        }).then(function (featureSet) {
+        }).then(featureSet => {
             if (featureSet.features.length) {
                 feature.attributes.Zoning = featureSet.features[0].attributes.ZONING;
             }
@@ -81,9 +81,9 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
             outFields: ['*'],
             outSpatialReference: { wkid: 102100 },
             returnGeometry: true
-        }).then(function (results) {
-            var searchResults = results.features.map(function (feature) {
-                var searchResult = {
+        }).then((results) => {
+            let searchResults = results.features.map((feature) => {
+                let searchResult = {
                     extent: feature.geometry.extent,
                     feature: feature,
                     name: feature.attributes.REID
@@ -94,40 +94,36 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         });
     }
     function loadSearch(view, layer) {
-        var reidSource = new SearchSource_1.default({
+        const reidSource = new SearchSource_1.default({
             placeholder: "Search By REID",
-            getSuggestions: function (params) {
+            getSuggestions: (params) => {
                 return getSuggestions(params, 'REID', layer);
             },
-            getResults: function (params) {
+            getResults: params => {
                 return getResults(params, 'REID', layer);
             },
             minSuggestCharacters: 4,
             //@ts-ignore
             name: 'REID'
         });
-        var addrSource = new SearchSource_1.default({
+        const addrSource = new SearchSource_1.default({
             placeholder: "Search By Site Address",
-            getSuggestions: function (params) {
+            getSuggestions: (params) => {
                 return getSuggestions(params, 'SITE_ADDRESS', layer);
             },
-            getResults: function (params) {
+            getResults: params => {
                 return getResults(params, 'SITE_ADDRESS', layer);
             },
             minSuggestCharacters: 4,
             //@ts-ignore
             name: 'Address'
         });
-        var search = new Search_1.default({
+        const search = new Search_1.default({
             container: document.createElement('div'),
             includeDefaultSources: false,
             sources: [reidSource, addrSource]
         });
         view.ui.add(search, 'top-left');
-        var reid = getUrlParameter('reid');
-        if (reid) {
-            search.search(getUrlParameter('reid'));
-        }
         return search;
     }
     function searchResult(result, view, fee, form, expand) {
@@ -135,7 +131,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         view.popup.open({ features: [result.result.feature] });
         fee.queryFeatures({ where: "REID = '" + result.result.feature.attributes.REID + "'",
             outFields: ['*']
-        }).then(function (featureSet) {
+        }).then(featureSet => {
             if (featureSet.features.length) {
                 form.feature = featureSet.features[0];
                 document.getElementById("form").classList.remove('esri-hidden');
@@ -152,7 +148,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         });
     }
     function loadForm(view, layer) {
-        var form = new FeatureForm_1.default({
+        let form = new FeatureForm_1.default({
             container: "form",
             layer: layer,
             groupDisplay: 'sequential',
@@ -192,6 +188,10 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
                             name: "Private_Comments",
                             label: "Private Comments",
                             editorType: "text-area"
+                        },
+                        {
+                            name: "COUNCIL_DIST",
+                            label: "Council District"
                         }
                     ]
                 }),
@@ -289,15 +289,15 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
     }
     function formSubmitted(view, form, fee, expand) {
         form.feature.attributes = form.getValues();
-        var adds = [];
-        var updates = [];
+        let adds = [];
+        let updates = [];
         if (form.feature.layer === fee) {
             updates.push(form.feature);
         }
         else {
             adds.push(form.feature);
         }
-        fee.applyEdits({ addFeatures: adds, updateFeatures: updates }).then(function (result) {
+        fee.applyEdits({ addFeatures: adds, updateFeatures: updates }).then(result => {
             fee.refresh();
             form.feature = null;
             document.getElementById("form").classList.add('esri-hidden');
@@ -447,10 +447,10 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         }
     }
     function loadLayerList(view) {
-        var layerList = new LayerList_1.default({ view: view,
+        let layerList = new LayerList_1.default({ view: view,
             container: document.createElement('div'),
-            listItemCreatedFunction: function (event) {
-                var item = event.item;
+            listItemCreatedFunction: (event) => {
+                let item = event.item;
                 if (item.title === 'Property Boundaries') {
                     item.open = true;
                     item.actionsOpen = true;
@@ -544,22 +544,22 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         return layerList;
     }
     function loadWidgets(view) {
-        var layerExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: loadLayerList(view), expanded: false });
-        var legendExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new Legend_1.default({ view: view, container: document.createElement('div') }) });
-        var basemapExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new BasemapGallery_1.default({ view: view, container: document.createElement('div') }) });
-        layerExpand.watch('expanded', function (expanded) {
+        let layerExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: loadLayerList(view), expanded: false });
+        let legendExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new Legend_1.default({ view: view, container: document.createElement('div') }) });
+        let basemapExpand = new Expand_1.default({ container: document.createElement('div'), group: 'bottom-left', content: new BasemapGallery_1.default({ view: view, container: document.createElement('div') }) });
+        layerExpand.watch('expanded', (expanded) => {
             if (expanded) {
                 legendExpand.collapse();
                 basemapExpand.collapse();
             }
         });
-        legendExpand.watch('expanded', function (expanded) {
+        legendExpand.watch('expanded', (expanded) => {
             if (expanded) {
                 layerExpand.collapse();
                 basemapExpand.collapse();
             }
         });
-        basemapExpand.watch('expanded', function (expanded) {
+        basemapExpand.watch('expanded', (expanded) => {
             if (expanded) {
                 layerExpand.collapse();
                 legendExpand.collapse();
@@ -568,9 +568,9 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         view.ui.add([layerExpand, legendExpand, basemapExpand], 'bottom-left');
     }
     function loadTables(view) {
-        var tableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-organization', mode: 'floating', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('feeTable') });
-        var propTableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-table', mode: 'floating', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('propTable') });
-        tableExpand.watch('expanded', function (expanded) {
+        let tableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-organization', mode: 'floating', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('feeTable') });
+        let propTableExpand = new Expand_1.default({ expandIconClass: 'esri-icon-table', mode: 'floating', container: document.createElement('div'), group: 'bottom-right', content: document.getElementById('propTable') });
+        tableExpand.watch('expanded', expanded => {
             if (expanded) {
                 propTableExpand.collapse();
                 document.querySelector('#feeMatTable').classList.remove('esri-hidden');
@@ -580,7 +580,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
             }
         });
         view.ui.add(tableExpand, 'bottom-right');
-        propTableExpand.watch('expanded', function (expanded) {
+        propTableExpand.watch('expanded', expanded => {
             if (expanded) {
                 tableExpand.collapse();
                 document.querySelector('#propMatTable').classList.remove('esri-hidden');
@@ -592,26 +592,26 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         view.ui.add(propTableExpand, 'bottom-right');
     }
     function getLayer(view, title) {
-        return view.map.layers.filter(function (l) {
+        return view.map.layers.filter(l => {
             return l.title === title;
         }).getItemAt(0);
     }
     function propertyLoaded(view, layerView, fee) {
-        var copyAction = new ActionButton_1.default({
+        const copyAction = new ActionButton_1.default({
             title: "Create Real Estate",
             id: "create",
             className: "esri-icon-edit"
         });
-        var template = layerView.layer.popupTemplate.clone();
+        const template = layerView.layer.popupTemplate.clone();
         template.actions.add(copyAction);
         layerView.layer.popupTemplate = template;
-        var search = loadSearch(view, layerView.layer);
-        view.whenLayerView(fee).then(function (layerView) { return feeLoaded(view, layerView, search); });
+        const search = loadSearch(view, layerView.layer);
+        view.whenLayerView(fee).then(layerView => feeLoaded(view, layerView, search));
     }
     function mapViewClicked(view, layer, event, form, expand) {
-        view.hitTest(view.toScreen(event.mapPoint)).then(function (result) {
+        view.hitTest(view.toScreen(event.mapPoint)).then(result => {
             if (result.results.length) {
-                var matches = result.results.filter(function (r) {
+                let matches = result.results.filter(r => {
                     return r.graphic.layer === layer;
                 });
                 if (matches.length) {
@@ -629,7 +629,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
     }
     function rowSelected(detail, view, form, expand) {
         debugger;
-        detail.layer.queryFeatures({ returnGeometry: true, objectIds: [detail.attributes.OBJECTID], outFields: ['*'], outSpatialReference: view.spatialReference }).then(function (featureSet) {
+        detail.layer.queryFeatures({ returnGeometry: true, objectIds: [detail.attributes.OBJECTID], outFields: ['*'], outSpatialReference: view.spatialReference }).then((featureSet) => {
             view.goTo(featureSet.features);
             if (detail.layer.title === "City of Raleigh Fee Properties View") {
                 form.feature = featureSet.features[0];
@@ -644,10 +644,10 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         });
     }
     function deleteFeature(layer, form, expand, view) {
-        layer.applyEdits({ deleteFeatures: [{ attributes: { OBJECTID: document.getElementById('deleteConfirm').dataset.oid } }] }).then(function (result) {
+        layer.applyEdits({ deleteFeatures: [{ attributes: { OBJECTID: document.getElementById('deleteConfirm').dataset.oid } }] }).then(result => {
             console.log(result);
             layer.refresh();
-            var modal = document.querySelector("calcite-modal");
+            const modal = document.querySelector("calcite-modal");
             //@ts-ignore
             modal.close();
             form.feature = null;
@@ -661,9 +661,13 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
     }
     function feeLoaded(view, layerView, search) {
         document.getElementById("update").classList.remove('esri-hidden');
+        let reid = getUrlParameter('reid');
+        if (reid) {
+            search.search(getUrlParameter('reid'));
+        }
         layerView.layer.popupEnabled = false;
-        var form = loadForm(view, layerView.layer);
-        var formExpand = new Expand_1.default({ container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
+        const form = loadForm(view, layerView.layer);
+        let formExpand = new Expand_1.default({ container: document.createElement('div'), expandIconClass: 'esri-icon-edit', autoCollapse: true, group: 'right', content: document.getElementById('update') });
         view.ui.add(formExpand, 'top-right');
         document.getElementById("updateText").classList.remove('esri-hidden');
         view.popup.on("trigger-action", function (event) {
@@ -672,39 +676,39 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
             }
         });
         layerView.layer.outFields = ['*'];
-        view.on('click', function (event) { return mapViewClicked(view, layerView.layer, event, form, formExpand); });
-        form.on('submit', function () {
+        view.on('click', (event) => mapViewClicked(view, layerView.layer, event, form, formExpand));
+        form.on('submit', () => {
             formSubmitted(view, form, layerView.layer, formExpand);
         });
         loadWidgets(view);
         loadTables(view);
-        document.addEventListener('rowSelected', function (event) { return rowSelected(event.detail, view, form, formExpand); });
-        search.on('select-result', function (result) {
+        document.addEventListener('rowSelected', (event) => rowSelected(event.detail, view, form, formExpand));
+        search.on('select-result', result => {
             searchResult(result, view, layerView.layer, form, formExpand);
         });
-        document.getElementById("btnUpdate").onclick = function () {
+        document.getElementById("btnUpdate").onclick = () => {
             form.submit();
         };
-        document.getElementById("btnDelete").onclick = function () {
-            var modal = document.querySelector("calcite-modal");
+        document.getElementById("btnDelete").onclick = () => {
+            const modal = document.querySelector("calcite-modal");
             //@ts-ignore
             modal.open();
         };
-        document.getElementById('deleteConfirm').onclick = function (e) { return deleteFeature(layerView.layer, form, formExpand, view); };
+        document.getElementById('deleteConfirm').onclick = (e) => deleteFeature(layerView.layer, form, formExpand, view);
     }
     function viewLoaded(view) {
-        var property = getLayer(view, 'Property Boundaries');
-        var fee = getLayer(view, "City of Raleigh Fee Properties");
-        var fields = [];
+        let property = getLayer(view, 'Property Boundaries');
+        let fee = getLayer(view, "City of Raleigh Fee Properties");
+        let fields = [];
         property.popupTemplate
-            .fieldInfos.forEach(function (field) {
+            .fieldInfos.forEach(field => {
             if (field.visible) {
                 fields.push(field.fieldName);
             }
         });
         document.querySelector('#propMatTable').setAttribute('fields', fields.toString());
         fee.popupTemplate
-            .fieldInfos.forEach(function (field) {
+            .fieldInfos.forEach(field => {
             if (field.visible) {
                 fields.push(field.fieldName);
             }
@@ -712,17 +716,17 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         document.querySelector('#feeMatTable').setAttribute('fields', fields.toString());
         document.querySelector('#propMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
         document.querySelector('#feeMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
-        view.watch('stationary', function (event) {
+        view.watch('stationary', (event) => {
             if (event) {
                 document.querySelector('#propMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
                 document.querySelector('#feeMatTable').setAttribute('extent', JSON.stringify(view.extent.toJSON()));
             }
         });
-        view.whenLayerView(property).then(function (layerView) { return propertyLoaded(view, layerView, fee); });
+        view.whenLayerView(property).then(layerView => propertyLoaded(view, layerView, fee));
     }
     function signedIn(event) {
-        var webMap = new WebMap_1.default({ portalItem: { id: "473e977864324dcf8c6ffbdfa1bcc92f" } });
-        var view = new MapView_1.default({
+        const webMap = new WebMap_1.default({ portalItem: { id: "473e977864324dcf8c6ffbdfa1bcc92f" } });
+        const view = new MapView_1.default({
             map: webMap,
             container: "viewDiv",
             center: [-78.65, 35.8],
@@ -732,7 +736,7 @@ define(["require", "exports", "esri/widgets/LayerList", "esri/widgets/Legend", "
         view.when(viewLoaded);
     }
     IdentityManager_1.default.registerOAuthInfos([info]);
-    IdentityManager_1.default.checkSignInStatus(info.portalUrl + '/sharing').then(signedIn).catch(function () {
+    IdentityManager_1.default.checkSignInStatus(info.portalUrl + '/sharing').then(signedIn).catch(() => {
         IdentityManager_1.default.getCredential(info.portalUrl + '/sharing');
     });
 });
